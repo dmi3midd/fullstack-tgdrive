@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
+import { validationResult } from 'express-validator';
+import ApiError from '../exceptions/api.error';
 
 import authService from '../services/auth.service';
 
@@ -17,6 +19,10 @@ const loginSchema = z.object({
 class AuthController {
     async registration(req: Request, res: Response, next: NextFunction) {
         try {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return next(ApiError.BadRequest("Validation error", errors.array().map(error => error.msg)));
+            }
             const { email, password, botToken, chatId } = registrationSchema.parse(req.body);
             const adminData = await authService.registration(email, password, botToken, chatId);
             res.cookie('refreshToken', adminData.refreshToken, { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true })
@@ -28,6 +34,10 @@ class AuthController {
 
     async login(req: Request, res: Response, next: NextFunction) {
         try {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return next(ApiError.BadRequest("Validation error", errors.array().map(error => error.msg)));
+            }
             const { email, password } = loginSchema.parse(req.body);
             const adminData = await authService.login(email, password);
             res.cookie('refreshToken', adminData.refreshToken, { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true })
@@ -38,6 +48,10 @@ class AuthController {
     }
     async logout(req: Request, res: Response, next: NextFunction) {
         try {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return next(ApiError.BadRequest("Validation error", errors.array().map(error => error.msg)));
+            }
             const { refreshToken } = req.cookies;
             const token = await authService.logout(refreshToken);
             res.clearCookie('refreshToken');
@@ -49,6 +63,10 @@ class AuthController {
 
     async refresh(req: Request, res: Response, next: NextFunction) {
         try {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return next(ApiError.BadRequest("Validation error", errors.array().map(error => error.msg)));
+            }
             const { refreshToken } = req.cookies;
             const adminData = await authService.refresh(refreshToken);
             res.cookie('refreshToken', adminData.refreshToken, { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true })

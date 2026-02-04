@@ -10,12 +10,6 @@ const JWT_ACCESS_EXPIRATION = config.jwtAccessExpiresIn;
 const JWT_REFRESH_EXPIRATION = config.jwtRefreshExpiresIn;
 
 
-
-// export interface TokenPayload {
-//     email: string;
-//     id: string;
-// }
-
 class TokenService {
     generateTokens(payload: UserDto): { accessToken: string; refreshToken: string } {
         const accessToken = jwt.sign(

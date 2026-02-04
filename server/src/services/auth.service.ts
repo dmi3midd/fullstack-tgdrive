@@ -2,16 +2,17 @@ import bcrypt from 'bcrypt';
 import CryptoJS from 'crypto-js';
 
 import { config } from '../config/env.config';
-import { User, IUser } from "../models/user.model";
+import { User } from "../models/user.model";
 import { UserDto } from '../dtos/user.dto';
 import tokenService from './token.service';
+import ApiError from '../exceptions/api.error';
 
 
 class AuthService {
     async registration(email: string, password: string, botToken: string, chatId: string) {
         const candidate = await User.findOne({ email });
         if (candidate) {
-            throw new Error('User already exists');
+            throw ApiError.BadRequest('User already exists');
         }
         const hashedPassword = await bcrypt.hash(password, 10);
         const encryptedBotToken = CryptoJS.AES.encrypt(botToken, config.encryptionKey).toString();
@@ -29,11 +30,11 @@ class AuthService {
     async login(email: string, password: string) {
         const user = await User.findOne({ email });
         if (!user) {
-            throw new Error('User not found');
+            throw ApiError.NotFound('User not found');
         }
         const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
         if (!isPasswordValid) {
-            throw new Error('Invalid password');
+            throw ApiError.BadRequest('Invalid password');
         }
         const userDto = new UserDto(user);
         const tokens = tokenService.generateTokens({ ...userDto });
@@ -51,16 +52,16 @@ class AuthService {
 
     async refresh(refreshToken: string) {
         if (!refreshToken) {
-            throw new Error('Refresh token is required');
+            throw ApiError.Unauthorized();
         }
         const userData = tokenService.validateRefreshToken(refreshToken);
         const foundToken = await tokenService.findToken(refreshToken);
         if (!userData || !foundToken) {
-            throw new Error('Invalid refresh token');
+            throw ApiError.Unauthorized();
         }
         const user = await User.findById(userData.id);
         if (!user) {
-            throw new Error('User not found');
+            throw ApiError.NotFound('User not found');
         }
         const userDto = new UserDto(user);
         const tokens = tokenService.generateTokens({ ...userDto });

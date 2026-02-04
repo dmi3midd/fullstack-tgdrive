@@ -7,6 +7,7 @@ import cookieParser from 'cookie-parser';
 
 import { config } from './config/env.config';
 import authRouter from './routers/auth.router';
+import errorMiddleware from './middlewares/error.middleware';
 
 const app = express();
 
@@ -23,6 +24,7 @@ app.use(limiter);
 app.use(express.json());
 app.use(cookieParser());
 app.use('/auth', authRouter);
+app.use(errorMiddleware);
 
 async function start() {
     try {
