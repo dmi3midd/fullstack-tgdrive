@@ -1,13 +1,14 @@
 import { Request, Response, NextFunction } from 'express';
 import CryptoJS from 'crypto-js';
 
-import { User, IUser } from '../models/user.model';
+import { User } from '../models/user.model';
+import { UserDto } from '../dtos/user.dto';
 import tokenService from '../services/token.service';
 import { config } from '../config/env.config';
 import ApiError from '../exceptions/api.error';
 
 export interface AuthRequest extends Request {
-    user: IUser;
+    user: UserDto;
     tgCredentials: {
         botToken: string;
         chatId: string;
@@ -29,7 +30,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
             return next(ApiError.Unauthorized());
         }
 
-        (req as AuthRequest).user = user;
+        (req as AuthRequest).user = new UserDto(user);
         (req as AuthRequest).tgCredentials = {
             botToken: CryptoJS.AES.decrypt(user.encryptedBotToken, config.encryptionKey).toString(CryptoJS.enc.Utf8),
             chatId: CryptoJS.AES.decrypt(user.encryptedChatId, config.encryptionKey).toString(CryptoJS.enc.Utf8),
