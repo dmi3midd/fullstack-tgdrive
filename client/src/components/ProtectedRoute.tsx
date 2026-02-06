@@ -8,10 +8,10 @@ export const ProtectedRoute: React.FC = () => {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <div className="text-center space-y-4">
+            <div className="min-h-screen flex items-center justify-center bg-brand-bg">
+                <div className="text-center space-y-6">
                     <Spinner size="lg" />
-                    <p className="text-gray-500 font-medium">Verifying session...</p>
+                    <p className="text-brand-accent/40 text-[10px] font-black uppercase tracking-[0.4em]">Verifying Authentication...</p>
                 </div>
             </div>
         );

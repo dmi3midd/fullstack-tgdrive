@@ -26,7 +26,7 @@ export const Dropdown: React.FC<DropdownProps> = ({ trigger, children, align = '
 
             {isOpen && (
                 <div className={`
-          absolute z-50 mt-2 w-56 rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none py-1
+          absolute z-50 mt-2 w-56 rounded-xl bg-brand-surface shadow-2xl ring-1 ring-brand-accent/10 focus:outline-none py-1.5 border border-brand-accent/5
           ${align === 'right' ? 'right-0 origin-top-right' : 'left-0 origin-top-left'}
         `}>
                     {children}
@@ -45,8 +45,8 @@ export const DropdownItem: React.FC<{
         <button
             onClick={onClick}
             className={`
-        flex w-full items-center px-4 py-2 text-sm text-left transition-colors
-        ${variant === 'danger' ? 'text-red-600 hover:bg-red-50' : 'text-gray-700 hover:bg-gray-100'}
+        flex w-full items-center px-4 py-2.5 text-sm text-left transition-colors font-medium
+        ${variant === 'danger' ? 'text-red-400 hover:bg-red-500/10' : 'text-brand-text/80 hover:bg-brand-muted/20 hover:text-brand-text'}
       `}
         >
             {children}

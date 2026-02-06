@@ -19,109 +19,110 @@ export const MainLayout: React.FC = () => {
     ];
 
     const SidebarContent = () => (
-        <div className="flex flex-col h-full bg-white border-r border-gray-100">
-            <div className="p-6 flex items-center gap-3">
-                <div className="bg-blue-600 p-2 rounded-lg shadow-sm">
-                    <Folder className="text-white" size={24} />
+        <div className="flex flex-col h-full bg-brand-surface border-r border-brand-accent/10">
+            <div className="p-8 flex items-center gap-3">
+                <div className="bg-brand-accent p-2.5 rounded-2xl shadow-[0_0_20px_rgba(198,172,143,0.2)]">
+                    <Folder className="text-brand-bg fill-brand-bg/20" size={24} />
                 </div>
-                <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">
+                <span className="text-2xl font-black text-brand-text tracking-tight uppercase">
                     TG Drive
                 </span>
             </div>
 
-            <nav className="flex-1 px-4 py-4 space-y-1">
+            <nav className="flex-1 px-4 py-8 space-y-2">
                 {navItems.map((item) => (
                     <NavLink
                         key={item.text}
                         to={item.path}
                         className={({ isActive }) => `
-              flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200
+              flex items-center gap-3 px-5 py-3.5 rounded-2xl transition-all duration-300
               ${isActive
-                                ? 'bg-blue-50 text-blue-700 font-semibold shadow-sm shadow-blue-100'
-                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}
+                                ? 'bg-brand-accent text-brand-bg font-bold shadow-xl shadow-black/20'
+                                : 'text-brand-text/60 hover:bg-brand-muted/20 hover:text-brand-text'}
             `}
                     >
                         {item.icon}
-                        {item.text}
+                        <span className="uppercase tracking-widest text-xs font-bold">{item.text}</span>
                     </NavLink>
                 ))}
             </nav>
 
-            <div className="p-4 mt-auto">
+            <div className="p-6 mt-auto">
                 <NavLink
                     to="/settings"
                     className={({ isActive }) => `
-            flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all
-            ${isActive ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-600 hover:bg-gray-50'}
+            flex items-center gap-3 px-5 py-3.5 rounded-2xl transition-all
+            ${isActive ? 'bg-brand-accent text-brand-bg font-bold' : 'text-brand-text/60 hover:bg-brand-muted/20 hover:text-brand-text'}
           `}
                 >
                     <Settings size={20} />
-                    Settings
+                    <span className="uppercase tracking-widest text-xs font-bold">Settings</span>
                 </NavLink>
             </div>
         </div>
     );
 
     return (
-        <div className="min-h-screen bg-white">
+        <div className="min-h-screen bg-brand-bg text-brand-text">
             {/* Header */}
-            <header className="fixed top-0 left-0 right-0 h-16 bg-white/80 backdrop-blur-md border-b border-gray-100 z-30 flex items-center justify-between px-4 lg:px-8">
+            <header className="fixed top-0 left-0 right-0 h-20 bg-brand-bg/80 backdrop-blur-xl border-b border-brand-accent/5 z-30 flex items-center justify-between px-6 lg:px-12">
                 <div className="flex items-center gap-4">
                     <button
-                        className="lg:hidden p-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
+                        className="lg:hidden p-2 text-brand-accent hover:bg-brand-surface rounded-xl transition-all"
                         onClick={() => setIsMobileOpen(true)}
                     >
-                        <Menu size={24} />
+                        <Menu size={26} />
                     </button>
 
-                    <div className="lg:hidden flex items-center gap-2">
-                        <Folder className="text-blue-600" size={24} />
-                        <span className="font-bold text-gray-900">TG Drive</span>
+                    <div className="lg:hidden flex items-center gap-3">
+                        <Folder className="text-brand-accent" size={26} />
+                        <span className="font-black text-brand-text uppercase tracking-tight">TG Drive</span>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-6">
                     <Dropdown
                         trigger={
-                            <button className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
-                                <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold">
+                            <button className="flex items-center gap-3 p-2 rounded-2xl hover:bg-brand-surface transition-all border border-transparent hover:border-brand-accent/20">
+                                <div className="w-9 h-9 rounded-xl bg-brand-accent text-brand-bg flex items-center justify-center font-black text-lg shadow-lg">
                                     {user?.email?.[0]?.toUpperCase()}
                                 </div>
                                 <div className="hidden sm:block text-left">
-                                    <p className="text-sm font-semibold text-gray-900 truncate max-w-[150px]">{user?.email}</p>
+                                    <p className="text-xs font-bold text-brand-text/40 uppercase tracking-tighter">Authorized as</p>
+                                    <p className="text-sm font-bold text-brand-text truncate max-w-[180px]">{user?.email}</p>
                                 </div>
                             </button>
                         }
                     >
-                        <div className="px-4 py-2 border-b border-gray-50 sm:hidden">
-                            <p className="text-xs text-gray-500 uppercase font-bold tracking-wider">Account</p>
-                            <p className="text-sm font-medium text-gray-900 truncate">{user?.email}</p>
+                        <div className="px-5 py-3 border-b border-brand-accent/5 sm:hidden">
+                            <p className="text-[10px] text-brand-accent uppercase font-black tracking-[0.2em] mb-1">Account</p>
+                            <p className="text-sm font-bold text-brand-text truncate">{user?.email}</p>
                         </div>
                         <DropdownItem onClick={() => navigate('/settings')}>
-                            <Settings size={16} className="mr-2" /> Settings
+                            <Settings size={18} className="mr-3 text-brand-accent" /> Settings
                         </DropdownItem>
                         <DropdownItem onClick={handleLogout} variant="danger">
-                            <LogOut size={16} className="mr-2" /> Logout
+                            <LogOut size={18} className="mr-3" /> Logout
                         </DropdownItem>
                     </Dropdown>
                 </div>
             </header>
 
             {/* Desktop Sidebar */}
-            <aside className="fixed top-0 left-0 bottom-0 w-64 hidden lg:block z-40">
+            <aside className="fixed top-0 left-0 bottom-0 w-72 hidden lg:block z-40">
                 <SidebarContent />
             </aside>
 
             {/* Mobile Drawer */}
             {isMobileOpen && (
                 <div className="fixed inset-0 z-50 lg:hidden">
-                    <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setIsMobileOpen(false)} />
-                    <div className="absolute left-0 top-0 bottom-0 w-72 bg-white transition-transform duration-300">
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={() => setIsMobileOpen(false)} />
+                    <div className="absolute left-0 top-0 bottom-0 w-80 bg-brand-bg border-r border-brand-accent/10 transition-transform duration-500 shadow-2xl">
                         <button
-                            className="absolute top-4 right-4 p-2 text-gray-500 hover:bg-gray-50 rounded-lg"
+                            className="absolute top-6 right-6 p-2 text-brand-accent hover:bg-brand-surface rounded-xl transition-all"
                             onClick={() => setIsMobileOpen(false)}
                         >
-                            <X size={20} />
+                            <X size={24} />
                         </button>
                         <SidebarContent />
                     </div>
@@ -129,8 +130,8 @@ export const MainLayout: React.FC = () => {
             )}
 
             {/* Main Content */}
-            <main className="lg:pl-64 pt-16 min-h-screen">
-                <div className="container mx-auto p-4 lg:p-8">
+            <main className="lg:pl-72 pt-20 min-h-screen">
+                <div className="container mx-auto px-6 py-8 lg:px-12 lg:py-12">
                     <Outlet />
                 </div>
             </main>

@@ -108,7 +108,7 @@ export const Dashboard: React.FC = () => {
     };
 
     return (
-        <div className="space-y-8" onClick={() => setContextMenu(null)}>
+        <div className="space-y-12" onClick={() => setContextMenu(null)}>
             <HiddenInput />
             <CreateFolderDialog
                 open={isCreateFolderOpen}
@@ -117,21 +117,24 @@ export const Dashboard: React.FC = () => {
             />
 
             {/* Header & Controls */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex items-center gap-2 overflow-hidden">
-                    <button
-                        onClick={() => setSearchParams({})}
-                        className="p-2 hover:bg-gray-100 rounded-lg text-gray-600 transition-colors shrink-0"
-                    >
-                        <Folder size={20} className="text-blue-600" />
-                    </button>
-                    <ChevronRight size={16} className="text-gray-300 shrink-0" />
-                    <h1 className="text-xl font-bold text-gray-900 truncate">
-                        {currentFolderId ? 'Folder Content' : 'My Files'}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 pb-8 border-b border-brand-accent/10">
+                <div className="space-y-2">
+                    <div className="flex items-center gap-3 text-brand-accent opacity-60">
+                        <button
+                            onClick={() => setSearchParams({})}
+                            className="hover:text-brand-text transition-colors p-1"
+                        >
+                            <Folder size={18} />
+                        </button>
+                        <ChevronRight size={14} />
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">Root</span>
+                    </div>
+                    <h1 className="text-4xl font-black text-brand-text uppercase tracking-tighter">
+                        {currentFolderId ? 'Sub-Vault' : 'My Storage'}
                     </h1>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                     {currentFolderId && (
                         <Button variant="ghost" onClick={() => navigate(-1)} className="hidden sm:inline-flex">
                             <ArrowLeft size={18} className="mr-2" /> Back
@@ -140,7 +143,7 @@ export const Dashboard: React.FC = () => {
                     <Button variant="outline" onClick={() => setIsCreateFolderOpen(true)}>
                         <Plus size={18} className="mr-2" /> New Folder
                     </Button>
-                    <Button onClick={triggerUpload} isLoading={isUploading}>
+                    <Button onClick={triggerUpload} isLoading={isUploading} className="shadow-[0_0_20px_rgba(198,172,143,0.3)]">
                         {!isUploading && <Upload size={18} className="mr-2" />}
                         {isUploading ? 'Uploading...' : 'Upload'}
                     </Button>
@@ -148,14 +151,14 @@ export const Dashboard: React.FC = () => {
             </div>
 
             {isUploading && (
-                <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
-                    <div className="flex justify-between text-sm mb-2 font-medium">
-                        <span>Uploading files...</span>
+                <div className="bg-brand-surface border border-brand-accent/20 rounded-2xl p-6 shadow-2xl">
+                    <div className="flex justify-between text-[10px] mb-3 font-black uppercase tracking-widest text-brand-accent">
+                        <span>Encrypting & Uploading...</span>
                         <span>{Math.round(uploadProgress)}%</span>
                     </div>
-                    <div className="w-full bg-gray-100 rounded-full h-2">
+                    <div className="w-full bg-brand-muted/20 rounded-full h-1.5 overflow-hidden">
                         <div
-                            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                            className="bg-brand-accent h-full rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(198,172,143,0.5)]"
                             style={{ width: `${uploadProgress}%` }}
                         />
                     </div>
@@ -163,43 +166,43 @@ export const Dashboard: React.FC = () => {
             )}
 
             {isLoading && !isUploading ? (
-                <div className="flex flex-col items-center justify-center py-24 gap-4">
+                <div className="flex flex-col items-center justify-center py-32 gap-6 bg-brand-surface/20 rounded-3xl border border-brand-accent/5">
                     <Spinner size="lg" />
-                    <p className="text-gray-500 font-medium">Loading your files...</p>
+                    <p className="text-brand-accent/40 font-black uppercase tracking-[0.3em] text-[10px]">Synchronizing...</p>
                 </div>
             ) : (
-                <div className="space-y-6">
+                <div className="space-y-12">
                     {/* Empty State */}
                     {content.folders.length === 0 && content.files.length === 0 && (
-                        <div className="flex flex-col items-center justify-center py-24 text-center border-2 border-dashed border-gray-100 rounded-2xl bg-gray-50/50">
-                            <div className="bg-white p-4 rounded-full shadow-sm mb-4">
-                                <Upload size={32} className="text-gray-300" />
+                        <div className="flex flex-col items-center justify-center py-32 text-center border-2 border-dashed border-brand-accent/10 rounded-[2rem] bg-brand-surface/10">
+                            <div className="bg-brand-surface p-6 rounded-3xl shadow-xl border border-brand-accent/10 mb-6">
+                                <Upload size={40} className="text-brand-accent opacity-20" />
                             </div>
-                            <h3 className="text-lg font-bold text-gray-900">No files yet</h3>
-                            <p className="text-gray-500 max-w-xs mt-1">
-                                Upload your first file or create a folder to get started.
+                            <h3 className="text-xl font-bold text-brand-text uppercase tracking-tight">Vault is Empty</h3>
+                            <p className="text-brand-accent/40 text-xs font-bold uppercase tracking-widest mt-2 max-w-xs leading-relaxed">
+                                Initialize storage by uploading files or creating secure sub-folders.
                             </p>
                         </div>
                     )}
 
                     {/* Folders Grid */}
                     {content.folders.length > 0 && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                             {content.folders.map(folder => (
                                 <div
                                     key={folder._id}
-                                    className="group relative bg-white border border-gray-100 rounded-xl p-4 hover:border-blue-200 hover:shadow-md hover:shadow-blue-500/5 transition-all cursor-pointer flex items-center justify-between"
+                                    className="group relative bg-brand-surface/40 border border-brand-accent/5 rounded-2xl p-5 hover:bg-brand-surface hover:border-brand-accent/30 hover:shadow-2xl hover:shadow-black transition-all cursor-pointer flex items-center justify-between"
                                     onClick={() => handleFolderClick(folder._id)}
                                     onContextMenu={(e) => handleContextMenu(e, 'folder', folder._id, folder.name)}
                                 >
-                                    <div className="flex items-center gap-3 overflow-hidden">
-                                        <div className="bg-yellow-50 p-2 rounded-lg group-hover:bg-yellow-100 transition-colors">
-                                            <Folder className="text-yellow-600 fill-yellow-600" size={24} />
+                                    <div className="flex items-center gap-4 overflow-hidden">
+                                        <div className="bg-brand-muted/20 p-3 rounded-xl group-hover:bg-brand-accent group-hover:text-brand-bg transition-all shadow-inner">
+                                            <Folder size={24} className="fill-current" />
                                         </div>
-                                        <span className="font-semibold text-gray-900 truncate">{folder.name}</span>
+                                        <span className="font-bold text-brand-text truncate text-sm uppercase tracking-wide">{folder.name}</span>
                                     </div>
                                     <button
-                                        className="p-1.5 opacity-0 group-hover:opacity-100 hover:bg-gray-50 rounded-lg transition-all text-gray-400"
+                                        className="p-2 opacity-0 group-hover:opacity-100 hover:bg-brand-muted/20 rounded-xl transition-all text-brand-accent/40 hover:text-brand-accent"
                                         onClick={(e) => { e.stopPropagation(); handleContextMenu(e as any, 'folder', folder._id, folder.name); }}
                                     >
                                         <MoreVertical size={18} />
@@ -211,24 +214,30 @@ export const Dashboard: React.FC = () => {
 
                     {/* Files Grid */}
                     {content.files.length > 0 && (
-                        <div className="space-y-4">
-                            <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Files</h2>
-                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                        <div className="space-y-6">
+                            <div className="flex items-center gap-4">
+                                <h2 className="text-[10px] font-black text-brand-accent/40 uppercase tracking-[0.4em]">Encrypted Payloads</h2>
+                                <div className="h-px bg-brand-accent/5 flex-1" />
+                            </div>
+                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
                                 {content.files.map(file => (
                                     <div
                                         key={file._id}
-                                        className="group relative bg-white border border-gray-100 rounded-2xl p-4 hover:border-blue-200 hover:shadow-md transition-all cursor-pointer text-center flex flex-col items-center gap-3"
+                                        className="group relative bg-brand-surface/20 border border-brand-accent/5 rounded-3xl p-6 hover:bg-brand-surface/60 hover:border-brand-accent/20 hover:shadow-2xl transition-all cursor-pointer text-center flex flex-col items-center gap-4"
                                         onContextMenu={(e) => handleContextMenu(e, 'file', file._id, file.name)}
                                     >
                                         <div className="relative">
-                                            <div className="bg-blue-50 p-4 rounded-2xl group-hover:bg-blue-100 transition-colors">
-                                                <FileIcon className="text-blue-600" size={32} />
+                                            <div className="bg-brand-muted/10 p-5 rounded-[1.5rem] group-hover:bg-brand-accent group-hover:text-brand-bg transition-all shadow-inner">
+                                                <FileIcon size={32} />
                                             </div>
                                         </div>
-                                        <span className="text-sm font-medium text-gray-900 truncate w-full">{file.name}</span>
+                                        <div className="space-y-1 w-full overflow-hidden">
+                                            <span className="text-xs font-bold text-brand-text truncate block">{file.name}</span>
+                                            <span className="text-[9px] font-bold text-brand-accent/30 uppercase tracking-tighter">Encrypted Blob</span>
+                                        </div>
 
                                         <button
-                                            className="absolute top-2 right-2 p-1 opacity-0 group-hover:opacity-100 hover:bg-gray-50 rounded-lg text-gray-400"
+                                            className="absolute top-3 right-3 p-1.5 opacity-0 group-hover:opacity-100 hover:bg-brand-muted/20 rounded-lg text-brand-accent/40 hover:text-brand-accent transition-all"
                                             onClick={(e) => { e.stopPropagation(); handleContextMenu(e as any, 'file', file._id, file.name); }}
                                         >
                                             <MoreHorizontal size={18} />
@@ -244,23 +253,26 @@ export const Dashboard: React.FC = () => {
             {/* Custom Context Menu */}
             {contextMenu && (
                 <div
-                    className="fixed z-50 bg-white shadow-xl shadow-gray-200/50 border border-gray-100 rounded-xl py-1 w-48 overflow-hidden"
+                    className="fixed z-50 bg-brand-surface shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-brand-accent/10 rounded-2xl py-2 w-56 overflow-hidden animate-in fade-in zoom-in duration-200"
                     style={{ top: contextMenu.y, left: contextMenu.x }}
                     onClick={(e) => e.stopPropagation()}
                 >
+                    <div className="px-4 py-2 border-b border-brand-accent/5 mb-1">
+                        <p className="text-[9px] font-black text-brand-accent/40 uppercase tracking-widest truncate">{contextMenu.item?.name}</p>
+                    </div>
                     {contextMenu.item?.type === 'file' && (
                         <button
                             onClick={handleDownload}
-                            className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                            className="w-full flex items-center gap-4 px-4 py-3 text-xs font-bold text-brand-text/80 hover:bg-brand-accent hover:text-brand-bg transition-all"
                         >
-                            <Download size={16} /> Download
+                            <Download size={16} /> DOWNLOAD
                         </button>
                     )}
                     <button
                         onClick={handleDelete}
-                        className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                        className="w-full flex items-center gap-4 px-4 py-3 text-xs font-bold text-red-400 hover:bg-red-500/20 transition-all"
                     >
-                        <Trash2 size={16} /> Delete
+                        <Trash2 size={16} /> DELETE
                     </button>
                 </div>
             )}

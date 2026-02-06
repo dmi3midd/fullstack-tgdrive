@@ -8,6 +8,6 @@ export const Spinner: React.FC<{ size?: 'sm' | 'md' | 'lg' }> = ({ size = 'md' }
     };
 
     return (
-        <div className={`${sizes[size]} animate-spin rounded-full border-blue-600 border-t-transparent`} />
+        <div className={`${sizes[size]} animate-spin rounded-full border-brand-accent border-t-transparent shadow-[0_0_15px_rgba(198,172,143,0.3)]`} />
     );
 };

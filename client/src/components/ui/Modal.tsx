@@ -34,17 +34,19 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }
             />
 
             {/* Content */}
-            <div className="relative w-full max-w-md bg-white rounded-xl shadow-2xl transition-all scale-100 p-6">
-                <div className="flex items-center justify-between mb-4">
-                    {title && <h3 className="text-lg font-bold text-gray-900">{title}</h3>}
+            <div className="relative w-full max-w-md bg-brand-surface rounded-2xl shadow-2xl transition-all scale-100 p-8 border border-brand-accent/10">
+                <div className="flex items-center justify-between mb-6">
+                    {title && <h3 className="text-xl font-bold text-brand-text tracking-tight">{title}</h3>}
                     <button
                         onClick={onClose}
-                        className="p-1 rounded-full hover:bg-gray-100 text-gray-500 transition-colors"
+                        className="p-2 rounded-xl hover:bg-brand-muted/20 text-brand-accent/60 hover:text-brand-accent transition-all active:scale-95"
                     >
                         <X size={20} />
                     </button>
                 </div>
-                {children}
+                <div className="text-brand-text/90">
+                    {children}
+                </div>
             </div>
         </div>
     );

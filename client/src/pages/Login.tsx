@@ -26,15 +26,15 @@ export const Login: React.FC = () => {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-8">
             <div className="text-center">
-                <h1 className="text-2xl font-bold text-gray-900">Sign in</h1>
-                <p className="mt-2 text-sm text-gray-500">Access your files from any device</p>
+                <h1 className="text-3xl font-black text-brand-text uppercase tracking-tighter">Sign In</h1>
+                <p className="mt-2 text-xs font-bold text-brand-accent uppercase tracking-[0.2em] opacity-60">Access your vault</p>
             </div>
 
             {error && <Alert variant="error">{error}</Alert>}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-6">
                 <Input
                     label="Email Address"
                     type="email"
@@ -54,18 +54,18 @@ export const Login: React.FC = () => {
 
                 <Button
                     type="submit"
-                    className="w-full"
+                    className="w-full py-4 text-xs font-black uppercase tracking-[0.3em]"
                     isLoading={isLoading}
                 >
-                    Sign In
+                    Authorize
                 </Button>
             </form>
 
             <div className="text-center">
-                <p className="text-sm text-gray-600">
-                    Don't have an account?{' '}
-                    <Link to="/register" className="font-semibold text-blue-600 hover:text-blue-500 transition-colors">
-                        Create one
+                <p className="text-xs font-bold text-brand-text/40 uppercase tracking-widest">
+                    New user?{' '}
+                    <Link to="/register" className="text-brand-accent hover:text-brand-text transition-all underline underline-offset-4 decoration-brand-accent/30 hover:decoration-brand-text">
+                        Create identity
                     </Link>
                 </p>
             </div>

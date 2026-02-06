@@ -1,1 +1,15 @@
 @import "tailwindcss";
+
+@theme {
+    --color-brand-bg: #0a0908;
+    --color-brand-surface: #22333b;
+    --color-brand-text: #eae0d5;
+    --color-brand-accent: #c6ac8f;
+    --color-brand-muted: #5e503f;
+}
+
+@layer base {
+    body {
+        @apply bg-brand-bg text-brand-text antialiased transition-colors duration-300;
+    }
+}

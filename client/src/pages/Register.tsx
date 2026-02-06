@@ -29,17 +29,17 @@ export const Register: React.FC = () => {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-8">
             <div className="text-center">
-                <h1 className="text-2xl font-bold text-gray-900">Create Account</h1>
-                <p className="mt-2 text-sm text-gray-500">Provide your Telegram Bot credentials</p>
+                <h1 className="text-3xl font-black text-brand-text uppercase tracking-tighter">Initialize</h1>
+                <p className="mt-2 text-xs font-bold text-brand-accent uppercase tracking-[0.2em] opacity-60">Create your secure vault</p>
             </div>
 
             {error && <Alert variant="error">{error}</Alert>}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-6">
                 <Input
-                    label="Email Address"
+                    label="Identity Email"
                     type="email"
                     required
                     value={email}
@@ -47,7 +47,7 @@ export const Register: React.FC = () => {
                     placeholder="name@example.com"
                 />
                 <Input
-                    label="Password"
+                    label="Secret Phrase"
                     type="password"
                     required
                     value={password}
@@ -55,20 +55,19 @@ export const Register: React.FC = () => {
                     placeholder="At least 8 characters"
                 />
 
-                <div className="pt-2 border-t border-gray-100 mt-2">
-                    <div className="flex items-center gap-2 mb-3">
-                        <Bot size={16} className="text-blue-600" />
-                        <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Telegram Config</span>
+                <div className="pt-6 border-t border-brand-accent/10 mt-6 bg-brand-bg/30 p-4 rounded-2xl">
+                    <div className="flex items-center gap-2 mb-4">
+                        <Bot size={18} className="text-brand-accent" />
+                        <span className="text-[10px] font-black text-brand-accent/50 uppercase tracking-[0.3em]">Telegram Uplink</span>
                     </div>
 
-                    <div className="space-y-4">
+                    <div className="space-y-5">
                         <Input
                             label="Bot Token"
                             required
                             value={botToken}
                             onChange={(e) => setBotToken(e.target.value)}
                             placeholder="123456789:ABCDE..."
-                            helperText="Get this from @BotFather"
                         />
                         <Input
                             label="Chat ID"
@@ -76,24 +75,23 @@ export const Register: React.FC = () => {
                             value={chatId}
                             onChange={(e) => setChatId(e.target.value)}
                             placeholder="123456789"
-                            helperText="Your Telegram ID (use @userinfobot)"
                         />
                     </div>
                 </div>
 
                 <Button
                     type="submit"
-                    className="w-full mt-4"
+                    className="w-full mt-4 py-4 text-xs font-black uppercase tracking-[0.3em]"
                     isLoading={isLoading}
                 >
-                    Create Account
+                    Establish Vault
                 </Button>
             </form>
 
             <div className="text-center">
-                <p className="text-sm text-gray-600">
-                    Already have an account?{' '}
-                    <Link to="/login" className="font-semibold text-blue-600 hover:text-blue-500">
+                <p className="text-xs font-bold text-brand-text/40 uppercase tracking-widest">
+                    Existing identity?{' '}
+                    <Link to="/login" className="text-brand-accent hover:text-brand-text transition-all underline underline-offset-4 decoration-brand-accent/30 hover:decoration-brand-text">
                         Sign in
                     </Link>
                 </p>
