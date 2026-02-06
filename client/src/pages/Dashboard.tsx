@@ -8,17 +8,19 @@ import { CreateFolderDialog } from '../components/CreateFolderDialog';
 import { useFileUpload } from '../hooks/useFileUpload';
 import { Button } from '../components/ui/Button';
 import { Spinner } from '../components/ui/Spinner';
+import { Toast } from '../components/ui/Toast';
 
 export const Dashboard: React.FC = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const navigate = useNavigate();
     const currentFolderId = searchParams.get('folderId');
 
-    const [content, setContent] = useState<FolderContentResponse>({ folders: [], files: [] });
+    const [content, setContent] = useState<FolderContentResponse>({ folders: [], files: [], path: [] });
     const [isLoading, setIsLoading] = useState(false);
     const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
     const [isUploading, setIsUploading] = useState(false);
+    const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' | 'warning' | 'info' } | null>(null);
 
     // Context Menu state
     const [contextMenu, setContextMenu] = useState<{
@@ -53,6 +55,17 @@ export const Dashboard: React.FC = () => {
     };
 
     const { triggerUpload, HiddenInput } = useFileUpload(async (files) => {
+        const MAX_SIZE = 50 * 1024 * 1024; // 50MB
+        const largeFiles = Array.from(files).filter(file => file.size > MAX_SIZE);
+
+        if (largeFiles.length > 0) {
+            setNotification({
+                message: `File "${largeFiles[0].name}" exceeds common 50MB limit.`,
+                type: 'warning'
+            });
+            return;
+        }
+
         setIsUploading(true);
         setUploadProgress(0);
         try {
@@ -62,8 +75,10 @@ export const Dashboard: React.FC = () => {
                 setUploadProgress(((i + 1) / total) * 100);
             }
             refreshContent();
+            setNotification({ message: 'Files uploaded successfully', type: 'success' });
         } catch (e) {
             console.error("Upload failed", e);
+            setNotification({ message: 'Upload failed. Please try again.', type: 'error' });
         } finally {
             setIsUploading(false);
             setUploadProgress(0);
@@ -118,19 +133,34 @@ export const Dashboard: React.FC = () => {
 
             {/* Header & Controls */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 pb-8 border-b border-brand-accent/10">
-                <div className="space-y-2">
-                    <div className="flex items-center gap-3 text-brand-accent opacity-60">
+                <div className="space-y-4 max-w-full overflow-hidden">
+                    <div className="flex items-center gap-2 text-brand-accent/50 overflow-x-auto scrollbar-hide pb-1">
                         <button
                             onClick={() => setSearchParams({})}
-                            className="hover:text-brand-text transition-colors p-1"
+                            className="hover:text-brand-text transition-all p-1.5 rounded-lg hover:bg-brand-surface shrink-0"
                         >
-                            <Folder size={18} />
+                            <Folder size={16} />
                         </button>
-                        <ChevronRight size={14} />
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">Root</span>
+
+                        {content.path.map((item, index) => (
+                            <React.Fragment key={item._id}>
+                                <ChevronRight size={12} className="shrink-0 opacity-30" />
+                                <button
+                                    onClick={() => handleFolderClick(item._id)}
+                                    className={`text-[10px] font-black uppercase tracking-[0.2em] whitespace-nowrap px-2 py-1.5 rounded-lg transition-all shrink-0
+                                        ${index === content.path.length - 1
+                                            ? 'text-brand-accent bg-brand-accent/10 border border-brand-accent/20'
+                                            : 'hover:text-brand-text hover:bg-brand-surface'}`}
+                                >
+                                    {item.name}
+                                </button>
+                            </React.Fragment>
+                        ))}
                     </div>
-                    <h1 className="text-4xl font-black text-brand-text uppercase tracking-tighter">
-                        {currentFolderId ? 'Sub-Vault' : 'My Storage'}
+                    <h1 className="text-4xl md:text-5xl font-black text-brand-text uppercase tracking-tighter leading-none">
+                        {currentFolderId && content.path.length > 0
+                            ? content.path[content.path.length - 1].name
+                            : 'My Storage'}
                     </h1>
                 </div>
 
@@ -173,7 +203,7 @@ export const Dashboard: React.FC = () => {
             ) : (
                 <div className="space-y-12">
                     {/* Empty State */}
-                    {content.folders.length === 0 && content.files.length === 0 && (
+                    {/* {content.folders.length === 0 && content.files.length === 0 && (
                         <div className="flex flex-col items-center justify-center py-32 text-center border-2 border-dashed border-brand-accent/10 rounded-[2rem] bg-brand-surface/10">
                             <div className="bg-brand-surface p-6 rounded-3xl shadow-xl border border-brand-accent/10 mb-6">
                                 <Upload size={40} className="text-brand-accent opacity-20" />
@@ -181,6 +211,14 @@ export const Dashboard: React.FC = () => {
                             <h3 className="text-xl font-bold text-brand-text uppercase tracking-tight">Vault is Empty</h3>
                             <p className="text-brand-accent/40 text-xs font-bold uppercase tracking-widest mt-2 max-w-xs leading-relaxed">
                                 Initialize storage by uploading files or creating secure sub-folders.
+                            </p>
+                        </div>
+                    )} */}
+                    {content.folders.length === 0 && content.files.length === 0 && (
+                        <div className="flex flex-col items-center justify-center py-32 text-center">
+                            <h3 className="text-xl font-bold text-brand-text uppercase tracking-tight">Directory is Empty</h3>
+                            <p className="text-brand-accent/40 text-xs font-bold uppercase tracking-widest mt-2 max-w-xs leading-relaxed">
+                                Initialize directory by uploading files or creating sub-folders.
                             </p>
                         </div>
                     )}
@@ -275,6 +313,13 @@ export const Dashboard: React.FC = () => {
                         <Trash2 size={16} /> DELETE
                     </button>
                 </div>
+            )}
+            {notification && (
+                <Toast
+                    message={notification.message}
+                    type={notification.type}
+                    onClose={() => setNotification(null)}
+                />
             )}
         </div>
     );

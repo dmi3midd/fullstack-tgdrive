@@ -1,4 +1,4 @@
-import { Folder } from '../models/folder.model';
+import { Folder, IFolder } from '../models/folder.model';
 import { File } from '../models/file.model';
 import { Types } from 'mongoose';
 import ApiError from '../exceptions/api.error';
@@ -24,7 +24,21 @@ class FoldersService {
         const folders = await Folder.find(query);
         const files = await File.find(query);
 
-        return { folders, files };
+        const path: any[] = [];
+        if (parentId) {
+            let currentId: string | null = parentId;
+            while (currentId) {
+                const currentFolder: IFolder | null = await Folder.findOne({ _id: currentId, ownerId });
+                if (currentFolder) {
+                    path.unshift({ _id: currentFolder._id, name: currentFolder.name });
+                    currentId = currentFolder.parentFolderId ? currentFolder.parentFolderId.toString() : null;
+                } else {
+                    currentId = null;
+                }
+            }
+        }
+
+        return { folders, files, path };
     }
 
     async renameFolder(folderId: string, name: string, ownerId: string) {

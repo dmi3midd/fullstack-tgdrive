@@ -28,4 +28,5 @@ export interface FileSystemItem {
 export interface FolderContentResponse {
     folders: FolderItem[];
     files: FileItem[];
+    path: { _id: string; name: string }[];
 }
