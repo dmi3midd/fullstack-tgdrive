@@ -4,6 +4,7 @@ dotenv.config();
 
 const envSchema = z.object({
     PORT: z.string().default('3000'),
+    FRONTEND_URL: z.string().min(1, 'FRONTEND_URL is required'),
     MONGODB_URL: z.string().min(1, 'MONGODB_URI is required'),
     JWT_ACCESS_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
     JWT_REFRESH_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
@@ -20,6 +21,7 @@ if (!env.success) {
 
 export const config = {
     port: env.data.PORT,
+    frontendUrl: env.data.FRONTEND_URL,
     mongodbUrl: env.data.MONGODB_URL,
     jwtAccessSecret: env.data.JWT_ACCESS_SECRET,
     jwtRefreshSecret: env.data.JWT_REFRESH_SECRET,
