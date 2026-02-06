@@ -30,14 +30,25 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
             return next(ApiError.Unauthorized());
         }
 
-        (req as AuthRequest).user = new UserDto(user);
-        (req as AuthRequest).tgCredentials = {
-            botToken: CryptoJS.AES.decrypt(user.encryptedBotToken, config.encryptionKey).toString(CryptoJS.enc.Utf8),
-            chatId: CryptoJS.AES.decrypt(user.encryptedChatId, config.encryptionKey).toString(CryptoJS.enc.Utf8),
-        };
+        try {
+            const botToken = CryptoJS.AES.decrypt(user.encryptedBotToken, config.encryptionKey).toString(CryptoJS.enc.Utf8);
+            const chatId = CryptoJS.AES.decrypt(user.encryptedChatId, config.encryptionKey).toString(CryptoJS.enc.Utf8);
+
+            if (!botToken || !chatId) {
+                return next(ApiError.BadRequest('Telegram credentials are missing or corrupted'));
+            }
+
+            (req as AuthRequest).user = new UserDto(user);
+            (req as AuthRequest).tgCredentials = { botToken, chatId };
+        } catch (error) {
+            return next(ApiError.BadRequest('Failed to decrypt Telegram credentials'));
+        }
 
         next();
     } catch (error) {
+        if (error instanceof ApiError) {
+            return next(error);
+        }
         next(ApiError.Unauthorized());
     }
 };
