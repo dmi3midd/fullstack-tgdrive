@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Folder, File as FileIcon, Upload, Plus, ChevronRight, MoreVertical, Download, Trash2, ArrowLeft, MoreHorizontal } from 'lucide-react';
+import { Folder, Upload, Plus, ChevronRight, MoreVertical, Download, Trash2, ArrowLeft, MoreHorizontal } from 'lucide-react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { foldersApi } from '../api/folders';
 import { filesApi } from '../api/files';
@@ -9,6 +9,7 @@ import { useFileUpload } from '../hooks/useFileUpload';
 import { Button } from '../components/ui/Button';
 import { Spinner } from '../components/ui/Spinner';
 import { Toast } from '../components/ui/Toast';
+import { getFileIcon } from '../utils/getFileIcon';
 
 export const Dashboard: React.FC = () => {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -266,7 +267,7 @@ export const Dashboard: React.FC = () => {
                                     >
                                         <div className="relative">
                                             <div className="bg-brand-muted/10 p-5 rounded-[1.5rem] group-hover:bg-brand-accent group-hover:text-brand-bg transition-all shadow-inner">
-                                                <FileIcon size={32} />
+                                                {React.createElement(getFileIcon(file.name, file.mimeType), { size: 32 })}
                                             </div>
                                         </div>
                                         <div className="space-y-1 w-full overflow-hidden">
