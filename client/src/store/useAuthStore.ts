@@ -58,7 +58,22 @@ export const useAuthStore = create<AuthState>((set) => ({
     },
 
     checkAuth: async () => {
-        // In a real app we might call a /me endpoint. 
-        // For now if we have a token we assume auth, and if requests fail 401 interceptor handles it.
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+            set({ isAuth: false, isLoading: false });
+            return;
+        }
+
+        set({ isLoading: true });
+        try {
+            const user = await authApi.getMe();
+            set({ user, isAuth: true });
+        } catch (e) {
+            console.error("Auth check failed", e);
+            localStorage.removeItem('accessToken');
+            set({ user: null, isAuth: false });
+        } finally {
+            set({ isLoading: false });
+        }
     }
 }));

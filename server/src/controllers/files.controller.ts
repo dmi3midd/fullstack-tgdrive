@@ -47,6 +47,26 @@ class FilesController {
         }
     }
 
+    async streamFile(req: Request, res: Response, next: NextFunction) {
+        try {
+            const authReq = req as AuthRequest;
+            const fileId = req.params.id as string;
+
+            const { file, stream } = await filesService.getFileStreamWithMetadata(
+                fileId,
+                authReq.user.id,
+                authReq.tgCredentials
+            );
+
+            res.setHeader('Content-Type', file.mimeType);
+            res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(file.name)}"`);
+
+            (stream as any).pipe(res);
+        } catch (error) {
+            next(error);
+        }
+    }
+
     async renameFile(req: Request, res: Response, next: NextFunction) {
         try {
             const authReq = req as AuthRequest;

@@ -13,6 +13,7 @@ const upload = multer({
 
 router.post('/upload', upload.single('file'), authenticate, filesController.uploadFile);
 router.get('/:id/download', authenticate, filesController.downloadFile);
+router.get('/:id/stream', authenticate, filesController.streamFile);
 router.patch('/:id/rename', authenticate, filesController.renameFile);
 router.patch('/:id/move', authenticate, filesController.moveFile);
 router.delete('/:id', authenticate, filesController.deleteFile);

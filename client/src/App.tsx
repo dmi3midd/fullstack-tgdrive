@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthLayout } from './layouts/AuthLayout';
 import { MainLayout } from './layouts/MainLayout';
@@ -5,8 +6,15 @@ import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Dashboard } from './pages/Dashboard';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { useAuthStore } from './store/useAuthStore';
 
 function App() {
+  const { checkAuth } = useAuthStore();
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
   return (
     <Routes>
       <Route element={<AuthLayout />}>
@@ -17,8 +25,6 @@ function App() {
       <Route element={<ProtectedRoute />}>
         <Route element={<MainLayout />}>
           <Route path="/" element={<Dashboard />} />
-          <Route path="/recent" element={<div>Recent Files (Coming Soon)</div>} />
-          <Route path="/trash" element={<div>Trash (Coming Soon)</div>} />
           <Route path="/settings" element={<div>Settings (Coming Soon)</div>} />
         </Route>
       </Route>

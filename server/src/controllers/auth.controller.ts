@@ -75,6 +75,15 @@ class AuthController {
             next(error);
         }
     }
+
+    async getMe(req: Request, res: Response, next: NextFunction) {
+        try {
+            const user = (req as any).user;
+            return res.json(user);
+        } catch (error) {
+            next(error);
+        }
+    }
 }
 
 export default new AuthController();

@@ -125,12 +125,11 @@ export const Dashboard: React.FC = () => {
 
     const handleDownload = async () => {
         if (!contextMenu?.item || contextMenu.item.type !== 'file') return;
-        try {
-            const { downloadLink } = await filesApi.download(contextMenu.item.id);
-            window.open(downloadLink, '_blank');
-        } catch (e) {
-            console.error("Download failed", e);
-        }
+        const token = localStorage.getItem('accessToken');
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+        const downloadUrl = `${apiUrl}/files/${contextMenu.item.id}/stream?token=${token}`;
+
+        window.open(downloadUrl, '_blank');
         setContextMenu(null);
     };
 

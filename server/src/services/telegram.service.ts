@@ -71,6 +71,14 @@ export class TelegramService {
         return `https://api.telegram.org/file/bot${this.botToken}/${filePath}`;
     }
 
+    async getFileStream(fileId: string): Promise<Stream> {
+        const fileLink = await this.getFileLink(fileId);
+        const response = await axios.get(fileLink, {
+            responseType: 'stream',
+        });
+        return response.data;
+    }
+
     async deleteMessage(chatId: string, messageId: number): Promise<boolean> {
         try {
             const response = await axios.post(`${this.baseUrl}/deleteMessage`, {

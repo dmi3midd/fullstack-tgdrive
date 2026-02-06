@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { body, cookie } from 'express-validator';
 import authController from '../controllers/auth.controller';
+import { authenticate } from '../middlewares/auth.middleware';
 
 const router = Router();
 
@@ -21,6 +22,10 @@ router.post('/logout',
 router.post('/refresh',
     cookie('refreshToken').notEmpty().isJWT(),
     authController.refresh
+);
+router.get('/me',
+    authenticate,
+    authController.getMe
 );
 
 export default router;

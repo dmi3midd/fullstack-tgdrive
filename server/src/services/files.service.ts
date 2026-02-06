@@ -62,6 +62,25 @@ class FilesService {
         };
     }
 
+    async getFileStreamWithMetadata(fileId: string, ownerId: string, tgCredentials: { botToken: string }) {
+        const file = await File.findOne({ _id: fileId, ownerId });
+        if (!file) {
+            throw ApiError.NotFound('File not found');
+        }
+
+        if (!file.telegramFileId) {
+            throw ApiError.BadRequest('File not uploaded to Telegram correctly');
+        }
+
+        const telegramService = new TelegramService(tgCredentials.botToken);
+        const stream = await telegramService.getFileStream(file.telegramFileId);
+
+        return {
+            file,
+            stream
+        };
+    }
+
     async renameFile(fileId: string, name: string, ownerId: string) {
         const file = await File.findOne({ _id: fileId, ownerId });
         if (!file) {

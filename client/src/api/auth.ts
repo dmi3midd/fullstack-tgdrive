@@ -1,5 +1,5 @@
 import client from './client';
-import type { AuthResponse, LoginCredentials, RegisterCredentials } from '../types/auth';
+import type { User, AuthResponse, LoginCredentials, RegisterCredentials } from '../types/auth';
 
 export const authApi = {
     login: async (credentials: LoginCredentials) => {
@@ -14,5 +14,10 @@ export const authApi = {
 
     logout: async () => {
         await client.post('/auth/logout');
+    },
+
+    getMe: async () => {
+        const response = await client.get<User>('/auth/me');
+        return response.data;
     },
 };
