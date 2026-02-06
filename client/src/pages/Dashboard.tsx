@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Folder, Upload, Plus, ChevronRight, MoreVertical, Download, Trash2, ArrowLeft, MoreHorizontal } from 'lucide-react';
+import { Folder, Upload, Plus, ChevronRight, MoreVertical, Download, Trash2, ArrowLeft, MoreHorizontal, Move } from 'lucide-react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { foldersApi } from '../api/folders';
 import { filesApi } from '../api/files';
@@ -10,7 +10,7 @@ import { Button } from '../components/ui/Button';
 import { Spinner } from '../components/ui/Spinner';
 import { Toast } from '../components/ui/Toast';
 import { getFileIcon } from '../utils/getFileIcon';
-
+import { MoveDialog } from '../components/MoveDialog';
 export const Dashboard: React.FC = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const navigate = useNavigate();
@@ -22,6 +22,10 @@ export const Dashboard: React.FC = () => {
     const [uploadProgress, setUploadProgress] = useState(0);
     const [isUploading, setIsUploading] = useState(false);
     const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' | 'warning' | 'info' } | null>(null);
+
+    // Move state
+    const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
+    const [moveItem, setMoveItem] = useState<{ type: 'file' | 'folder', id: string, name: string } | null>(null);
 
     // Context Menu state
     const [contextMenu, setContextMenu] = useState<{
@@ -112,6 +116,13 @@ export const Dashboard: React.FC = () => {
         setContextMenu(null);
     };
 
+    const handleMoveClick = () => {
+        if (!contextMenu?.item) return;
+        setMoveItem(contextMenu.item);
+        setIsMoveDialogOpen(true);
+        setContextMenu(null);
+    };
+
     const handleDownload = async () => {
         if (!contextMenu?.item || contextMenu.item.type !== 'file') return;
         try {
@@ -121,6 +132,40 @@ export const Dashboard: React.FC = () => {
             console.error("Download failed", e);
         }
         setContextMenu(null);
+    };
+
+    const onDragStart = (e: React.DragEvent, type: 'file' | 'folder', id: string, name: string) => {
+        e.dataTransfer.setData('type', type);
+        e.dataTransfer.setData('id', id);
+        e.dataTransfer.setData('name', name);
+        e.dataTransfer.effectAllowed = 'move';
+    };
+
+    const onDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+    };
+
+    const onDrop = async (e: React.DragEvent, targetFolderId: string | null) => {
+        e.preventDefault();
+        const type = e.dataTransfer.getData('type') as 'file' | 'folder';
+        const id = e.dataTransfer.getData('id');
+        const name = e.dataTransfer.getData('name');
+
+        if (id === targetFolderId) return;
+
+        try {
+            if (type === 'file') {
+                await filesApi.move(id, targetFolderId);
+            } else {
+                await foldersApi.move(id, targetFolderId);
+            }
+            refreshContent();
+            setNotification({ message: `Moved ${name} successfully`, type: 'success' });
+        } catch (error) {
+            console.error('Move failed', error);
+            setNotification({ message: 'Move failed', type: 'error' });
+        }
     };
 
     return (
@@ -233,6 +278,10 @@ export const Dashboard: React.FC = () => {
                                     className="group relative bg-brand-surface/40 border border-brand-accent/5 rounded-2xl p-5 hover:bg-brand-surface hover:border-brand-accent/30 hover:shadow-2xl hover:shadow-black transition-all cursor-pointer flex items-center justify-between"
                                     onClick={() => handleFolderClick(folder._id)}
                                     onContextMenu={(e) => handleContextMenu(e, 'folder', folder._id, folder.name)}
+                                    draggable
+                                    onDragStart={(e) => onDragStart(e, 'folder', folder._id, folder.name)}
+                                    onDragOver={onDragOver}
+                                    onDrop={(e) => onDrop(e, folder._id)}
                                 >
                                     <div className="flex items-center gap-4 overflow-hidden">
                                         <div className="bg-brand-muted/20 p-3 rounded-xl group-hover:bg-brand-accent group-hover:text-brand-bg transition-all shadow-inner">
@@ -264,6 +313,8 @@ export const Dashboard: React.FC = () => {
                                         key={file._id}
                                         className="group relative bg-brand-surface/20 border border-brand-accent/5 rounded-3xl p-6 hover:bg-brand-surface/60 hover:border-brand-accent/20 hover:shadow-2xl transition-all cursor-pointer text-center flex flex-col items-center gap-4"
                                         onContextMenu={(e) => handleContextMenu(e, 'file', file._id, file.name)}
+                                        draggable
+                                        onDragStart={(e) => onDragStart(e, 'file', file._id, file.name)}
                                     >
                                         <div className="relative">
                                             <div className="bg-brand-muted/10 p-5 rounded-[1.5rem] group-hover:bg-brand-accent group-hover:text-brand-bg transition-all shadow-inner">
@@ -308,6 +359,12 @@ export const Dashboard: React.FC = () => {
                         </button>
                     )}
                     <button
+                        onClick={handleMoveClick}
+                        className="w-full flex items-center gap-4 px-4 py-3 text-xs font-bold text-brand-text/80 hover:bg-brand-accent hover:text-brand-bg transition-all"
+                    >
+                        <Move size={16} /> MOVE
+                    </button>
+                    <button
                         onClick={handleDelete}
                         className="w-full flex items-center gap-4 px-4 py-3 text-xs font-bold text-red-400 hover:bg-red-500/20 transition-all"
                     >
@@ -322,6 +379,20 @@ export const Dashboard: React.FC = () => {
                     onClose={() => setNotification(null)}
                 />
             )}
+
+            <MoveDialog
+                open={isMoveDialogOpen}
+                onClose={() => {
+                    setIsMoveDialogOpen(false);
+                    setMoveItem(null);
+                }}
+                item={moveItem}
+                currentFolderId={currentFolderId}
+                onSuccess={() => {
+                    refreshContent();
+                    setNotification({ message: 'Moved successfully', type: 'success' });
+                }}
+            />
         </div>
     );
 };

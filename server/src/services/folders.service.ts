@@ -57,12 +57,21 @@ class FoldersService {
             throw ApiError.NotFound('Folder not found');
         }
 
-        // Prevent moving folder into itself or its children - simplified check for now
         if (newParentId === folderId) {
             throw ApiError.BadRequest('Cannot move folder into itself');
         }
 
-        // Proper circular check would require traversing up from newParentId
+        // Circular check: traverse up from newParentId to absolute root
+        if (newParentId) {
+            let currentParentId: string | null = newParentId;
+            while (currentParentId) {
+                if (currentParentId === folderId) {
+                    throw ApiError.BadRequest('Cannot move folder into its own subfolder');
+                }
+                const parentFolder: IFolder | null = await Folder.findOne({ _id: currentParentId, ownerId });
+                currentParentId = parentFolder?.parentFolderId ? parentFolder.parentFolderId.toString() : null;
+            }
+        }
 
         folder.parentFolderId = newParentId ? new Types.ObjectId(newParentId) : null;
         await folder.save();
