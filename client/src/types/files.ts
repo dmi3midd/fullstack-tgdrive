@@ -25,8 +25,13 @@ export interface FileSystemItem {
     updatedAt: string;
 }
 
+export interface FolderPathItem {
+    _id: string;
+    name: string;
+}
+
 export interface FolderContentResponse {
     folders: FolderItem[];
     files: FileItem[];
-    path: { _id: string; name: string }[];
+    path: FolderPathItem[];
 }
