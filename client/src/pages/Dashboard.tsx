@@ -54,7 +54,7 @@ export const Dashboard: React.FC = () => {
     };
 
     return (
-        <div className="space-y-12" onClick={() => setContextMenu(null)}>
+        <div className="space-y-12">
             <HiddenInput />
             <CreateFolderDialog
                 open={isCreateFolderOpen}
@@ -121,6 +121,7 @@ export const Dashboard: React.FC = () => {
                     onDownload={handleDownload}
                     onMove={handleMoveClick}
                     onDelete={handleDelete}
+                    onClose={() => setContextMenu(null)}
                 />
             )}
 
