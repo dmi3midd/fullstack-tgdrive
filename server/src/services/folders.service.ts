@@ -46,6 +46,25 @@ class FoldersService {
         if (!folder) {
             throw ApiError.NotFound('Folder not found');
         }
+
+        // Check for collisions in both files and folders
+        const collisionFile = await File.findOne({
+            ownerId,
+            parentFolderId: folder.parentFolderId,
+            name
+        });
+
+        const collisionFolder = await Folder.findOne({
+            ownerId,
+            parentFolderId: folder.parentFolderId,
+            name,
+            _id: { $ne: folderId }
+        });
+
+        if (collisionFile || collisionFolder) {
+            throw ApiError.BadRequest('A file or folder with this name already exists in this directory');
+        }
+
         folder.name = name;
         await folder.save();
         return folder;

@@ -12,6 +12,10 @@ export const useDashboardActions = (currentFolderId: string | null, refreshConte
     const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
     const [moveItem, setMoveItem] = useState<{ type: 'file' | 'folder', id: string, name: string } | null>(null);
 
+    // Rename state
+    const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
+    const [renameItem, setRenameItem] = useState<{ type: 'file' | 'folder', id: string, name: string } | null>(null);
+
     // Context Menu state
     const [contextMenu, setContextMenu] = useState<{
         x: number;
@@ -88,6 +92,30 @@ export const useDashboardActions = (currentFolderId: string | null, refreshConte
         setContextMenu(null);
     };
 
+    const handleRenameClick = () => {
+        if (!contextMenu?.item) return;
+        setRenameItem(contextMenu.item);
+        setIsRenameDialogOpen(true);
+        setContextMenu(null);
+    };
+
+    const handleRename = async (name: string) => {
+        if (!renameItem) return;
+        try {
+            if (renameItem.type === 'file') {
+                await filesApi.rename(renameItem.id, name);
+            } else {
+                await foldersApi.rename(renameItem.id, name);
+            }
+            await refreshContent();
+            setNotification({ message: 'Renamed successfully', type: 'success' });
+        } catch (e: any) {
+            console.error("Rename failed", e);
+            const errorMessage = e.response?.data?.message || 'Rename failed';
+            setNotification({ message: errorMessage, type: 'error' });
+        }
+    };
+
     const handleDownload = async () => {
         if (!contextMenu?.item || contextMenu.item.type !== 'file') return;
         const token = localStorage.getItem('accessToken');
@@ -152,6 +180,12 @@ export const useDashboardActions = (currentFolderId: string | null, refreshConte
         handleDownload,
         onDragStart,
         onDragOver,
-        onDrop
+        onDrop,
+        isRenameDialogOpen,
+        setIsRenameDialogOpen,
+        renameItem,
+        setRenameItem,
+        handleRenameClick,
+        handleRename
     };
 };

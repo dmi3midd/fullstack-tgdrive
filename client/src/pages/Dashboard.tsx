@@ -12,6 +12,7 @@ import { UploadProgress } from '../components/dashboard/UploadProgress';
 import { FolderGrid } from '../components/dashboard/FolderGrid';
 import { FileGrid } from '../components/dashboard/FileGrid';
 import { ContextMenu } from '../components/dashboard/ContextMenu';
+import { RenameDialog } from '../components/RenameDialog';
 
 export const Dashboard: React.FC = () => {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -40,7 +41,13 @@ export const Dashboard: React.FC = () => {
         handleDownload,
         onDragStart,
         onDragOver,
-        onDrop
+        onDrop,
+        isRenameDialogOpen,
+        setIsRenameDialogOpen,
+        renameItem,
+        setRenameItem,
+        handleRenameClick,
+        handleRename
     } = useDashboardActions(currentFolderId, refreshContent);
 
     const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
@@ -120,8 +127,22 @@ export const Dashboard: React.FC = () => {
                     item={contextMenu.item}
                     onDownload={handleDownload}
                     onMove={handleMoveClick}
+                    onRename={handleRenameClick}
                     onDelete={handleDelete}
                     onClose={() => setContextMenu(null)}
+                />
+            )}
+
+            {renameItem && (
+                <RenameDialog
+                    open={isRenameDialogOpen}
+                    onClose={() => {
+                        setIsRenameDialogOpen(false);
+                        setRenameItem(null);
+                    }}
+                    onSubmit={handleRename}
+                    initialName={renameItem.name}
+                    type={renameItem.type}
                 />
             )}
 

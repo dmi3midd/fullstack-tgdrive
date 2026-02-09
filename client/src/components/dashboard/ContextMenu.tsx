@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Download, Move, Trash2, X } from 'lucide-react';
+import { Download, Move, Trash2, X, Edit2 } from 'lucide-react';
 
 interface ContextMenuProps {
     x: number;
@@ -7,6 +7,7 @@ interface ContextMenuProps {
     item: { type: 'file' | 'folder', id: string, name: string } | null;
     onDownload: () => void;
     onMove: () => void;
+    onRename: () => void;
     onDelete: () => void;
     onClose: () => void;
 }
@@ -17,6 +18,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
     item,
     onDownload,
     onMove,
+    onRename,
     onDelete,
     onClose
 }) => {
@@ -66,6 +68,12 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
                 className="w-full flex items-center gap-4 px-4 py-3 text-xs font-bold text-brand-text/80 hover:bg-brand-accent hover:text-brand-bg transition-all"
             >
                 <Move size={16} /> MOVE
+            </button>
+            <button
+                onClick={onRename}
+                className="w-full flex items-center gap-4 px-4 py-3 text-xs font-bold text-brand-text/80 hover:bg-brand-accent hover:text-brand-bg transition-all"
+            >
+                <Edit2 size={16} /> RENAME
             </button>
             <button
                 onClick={onDelete}
