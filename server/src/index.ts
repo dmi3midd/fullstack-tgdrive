@@ -10,6 +10,7 @@ import authRouter from './routers/auth.router';
 import filesRouter from './routers/files.router';
 import foldersRouter from './routers/folders.router';
 import errorMiddleware from './middlewares/error.middleware';
+import loggingSubscriber from './subscribers/logging.subscriber';
 
 const app = express();
 
@@ -40,6 +41,9 @@ async function start() {
     try {
         await mongoose.connect(config.mongodbUrl);
         console.log('MongoDB connected');
+
+        loggingSubscriber.init();
+
         app.listen(config.port, () => {
             console.log(`Server is running on port ${config.port}`);
         });

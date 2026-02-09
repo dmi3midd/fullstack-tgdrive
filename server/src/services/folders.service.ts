@@ -4,6 +4,7 @@ import ApiError from '../exceptions/api.error';
 import filesService from './files.service';
 import folderRepository from '../repositories/folder.repository';
 import fileRepository from '../repositories/file.repository';
+import eventManager, { EventType } from '../events/event.manager';
 
 class FoldersService {
     async createFolder(name: string, parentFolderId: string | null, ownerId: string) {
@@ -12,6 +13,9 @@ class FoldersService {
             name,
             parentFolderId: parentFolderId ? new Types.ObjectId(parentFolderId) : null,
         });
+
+        eventManager.emit(EventType.FOLDER_CREATED, folder);
+
         return folder;
     }
 
@@ -66,6 +70,9 @@ class FoldersService {
         }
 
         const updatedFolder = await folderRepository.update(folderId, { name });
+
+        eventManager.emit(EventType.FOLDER_RENAMED, updatedFolder);
+
         return updatedFolder;
     }
 
@@ -94,6 +101,9 @@ class FoldersService {
         const updatedFolder = await folderRepository.update(folderId, {
             parentFolderId: newParentId ? new Types.ObjectId(newParentId) : null
         });
+
+        eventManager.emit(EventType.FOLDER_MOVED, updatedFolder);
+
         return updatedFolder;
     }
 
@@ -116,6 +126,9 @@ class FoldersService {
         }
 
         await folderRepository.delete(folderId);
+
+        eventManager.emit(EventType.FOLDER_DELETED, { folderId, ownerId });
+
         return { message: 'Folder and contents deleted' };
     }
 

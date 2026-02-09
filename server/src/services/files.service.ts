@@ -7,6 +7,7 @@ import fileRepository from '../repositories/file.repository';
 import folderRepository from '../repositories/folder.repository';
 import ApiError from '../exceptions/api.error';
 import { Types } from 'mongoose';
+import eventManager, { EventType } from '../events/event.manager';
 
 class FilesService {
     async uploadFile(
@@ -37,6 +38,8 @@ class FilesService {
                 telegramFileId: fileId,
             });
 
+            eventManager.emit(EventType.FILE_UPLOADED, newFile);
+
             return newFile;
         } catch (error: any) {
             console.error('File upload failed:', error);
@@ -56,6 +59,8 @@ class FilesService {
 
         const telegramService = TelegramServiceFactory.getInstance(tgCredentials.botToken);
         const fileLink = await telegramService.getFileLink(file.telegramFileId);
+
+        eventManager.emit(EventType.FILE_DOWNLOADED, { fileId, ownerId });
 
         return {
             file,
@@ -107,6 +112,9 @@ class FilesService {
         }
 
         const updatedFile = await fileRepository.update(fileId, { name });
+
+        eventManager.emit(EventType.FILE_RENAMED, updatedFile);
+
         return updatedFile;
     }
 
@@ -119,6 +127,9 @@ class FilesService {
         const updatedFile = await fileRepository.update(fileId, {
             parentFolderId: parentFolderId ? new Types.ObjectId(parentFolderId) : null
         });
+
+        eventManager.emit(EventType.FILE_MOVED, updatedFile);
+
         return updatedFile;
     }
 
@@ -132,6 +143,9 @@ class FilesService {
         await telegramService.deleteMessage(tgCredentials.chatId, file.telegramMessageId);
 
         await fileRepository.delete(fileId);
+
+        eventManager.emit(EventType.FILE_DELETED, { fileId, ownerId });
+
         return file;
     }
 }
