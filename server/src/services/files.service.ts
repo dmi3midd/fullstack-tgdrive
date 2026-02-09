@@ -1,10 +1,10 @@
 
 
+
 import { Stream } from 'stream';
-import multer from 'multer';
-import { TelegramService } from './telegram.service';
-import { File } from '../models/file.model';
-import { Folder } from '../models/folder.model';
+import { TelegramServiceFactory } from '../factories/telegram.factory';
+import fileRepository from '../repositories/file.repository';
+import folderRepository from '../repositories/folder.repository';
 import ApiError from '../exceptions/api.error';
 import { Types } from 'mongoose';
 
@@ -15,7 +15,7 @@ class FilesService {
         tgCredentials: { botToken: string; chatId: string },
         parentFolderId: string | null = null
     ) {
-        const telegramService = new TelegramService(tgCredentials.botToken);
+        const telegramService = TelegramServiceFactory.getInstance(tgCredentials.botToken);
 
         // Convert Buffer to Stream
         const fileStream = Stream.Readable.from(file.buffer);
@@ -27,12 +27,12 @@ class FilesService {
                 file.originalname
             );
 
-            const newFile = await File.create({
-                ownerId,
+            const newFile = await fileRepository.create({
+                ownerId: new Types.ObjectId(ownerId) as any,
                 name: file.originalname,
                 size: file.size,
                 mimeType: file.mimetype,
-                parentFolderId: parentFolderId || null,
+                parentFolderId: parentFolderId ? new Types.ObjectId(parentFolderId) : null,
                 telegramMessageId: messageId,
                 telegramFileId: fileId,
             });
@@ -45,7 +45,7 @@ class FilesService {
     }
 
     async downloadFile(fileId: string, ownerId: string, tgCredentials: { botToken: string; chatId: string }) {
-        const file = await File.findOne({ _id: fileId, ownerId });
+        const file = await fileRepository.findById(fileId, ownerId);
         if (!file) {
             throw ApiError.NotFound('File not found');
         }
@@ -54,7 +54,7 @@ class FilesService {
             throw ApiError.BadRequest('File not uploaded to Telegram correctly');
         }
 
-        const telegramService = new TelegramService(tgCredentials.botToken);
+        const telegramService = TelegramServiceFactory.getInstance(tgCredentials.botToken);
         const fileLink = await telegramService.getFileLink(file.telegramFileId);
 
         return {
@@ -64,7 +64,7 @@ class FilesService {
     }
 
     async getFileStreamWithMetadata(fileId: string, ownerId: string, tgCredentials: { botToken: string }) {
-        const file = await File.findOne({ _id: fileId, ownerId });
+        const file = await fileRepository.findById(fileId, ownerId);
         if (!file) {
             throw ApiError.NotFound('File not found');
         }
@@ -73,7 +73,7 @@ class FilesService {
             throw ApiError.BadRequest('File not uploaded to Telegram correctly');
         }
 
-        const telegramService = new TelegramService(tgCredentials.botToken);
+        const telegramService = TelegramServiceFactory.getInstance(tgCredentials.botToken);
         const stream = await telegramService.getFileStream(file.telegramFileId);
 
         return {
@@ -83,55 +83,55 @@ class FilesService {
     }
 
     async renameFile(fileId: string, name: string, ownerId: string) {
-        const file = await File.findOne({ _id: fileId, ownerId });
+        const file = await fileRepository.findById(fileId, ownerId);
         if (!file) {
             throw ApiError.NotFound('File not found');
         }
 
         // Check for collisions in both files and folders
-        const collisionFile = await File.findOne({
+        const collisionFile = await fileRepository.checkNameCollision(
             ownerId,
-            parentFolderId: file.parentFolderId,
+            file.parentFolderId?.toString() || null,
             name,
-            _id: { $ne: fileId }
-        });
+            fileId
+        );
 
-        const collisionFolder = await Folder.findOne({
+        const collisionFolder = await folderRepository.checkNameCollision(
             ownerId,
-            parentFolderId: file.parentFolderId,
+            file.parentFolderId?.toString() || null,
             name
-        });
+        );
 
         if (collisionFile || collisionFolder) {
             throw ApiError.BadRequest('A file or folder with this name already exists in this directory');
         }
 
-        file.name = name;
-        await file.save();
-        return file;
+        const updatedFile = await fileRepository.update(fileId, { name });
+        return updatedFile;
     }
 
     async moveFile(fileId: string, parentFolderId: string | null, ownerId: string) {
-        const file = await File.findOne({ _id: fileId, ownerId });
+        const file = await fileRepository.findById(fileId, ownerId);
         if (!file) {
             throw ApiError.NotFound('File not found');
         }
 
-        file.parentFolderId = parentFolderId ? new Types.ObjectId(parentFolderId) : null;
-        await file.save();
-        return file;
+        const updatedFile = await fileRepository.update(fileId, {
+            parentFolderId: parentFolderId ? new Types.ObjectId(parentFolderId) : null
+        });
+        return updatedFile;
     }
 
     async deleteFile(fileId: string, ownerId: string, tgCredentials: { botToken: string; chatId: string }) {
-        const file = await File.findOne({ _id: fileId, ownerId });
+        const file = await fileRepository.findById(fileId, ownerId);
         if (!file) {
             throw ApiError.NotFound('File not found');
         }
 
-        const telegramService = new TelegramService(tgCredentials.botToken);
+        const telegramService = TelegramServiceFactory.getInstance(tgCredentials.botToken);
         await telegramService.deleteMessage(tgCredentials.chatId, file.telegramMessageId);
 
-        await file.deleteOne();
+        await fileRepository.delete(fileId);
         return file;
     }
 }

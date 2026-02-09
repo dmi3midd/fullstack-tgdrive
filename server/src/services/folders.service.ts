@@ -1,17 +1,17 @@
-import { Folder, IFolder } from '../models/folder.model';
-import { File } from '../models/file.model';
+import { IFolder } from '../models/folder.model';
 import { Types } from 'mongoose';
 import ApiError from '../exceptions/api.error';
 import filesService from './files.service';
+import folderRepository from '../repositories/folder.repository';
+import fileRepository from '../repositories/file.repository';
 
 class FoldersService {
     async createFolder(name: string, parentFolderId: string | null, ownerId: string) {
-        const folder = new Folder({
-            ownerId,
+        const folder = await folderRepository.create({
+            ownerId: new Types.ObjectId(ownerId) as any,
             name,
             parentFolderId: parentFolderId ? new Types.ObjectId(parentFolderId) : null,
         });
-        await folder.save();
         return folder;
     }
 
@@ -21,14 +21,14 @@ class FoldersService {
             parentFolderId: parentId ? new Types.ObjectId(parentId) : null
         };
 
-        const folders = await Folder.find(query);
-        const files = await File.find(query);
+        const folders = await folderRepository.find(query);
+        const files = await fileRepository.find(query);
 
         const path: any[] = [];
         if (parentId) {
             let currentId: string | null = parentId;
             while (currentId) {
-                const currentFolder: IFolder | null = await Folder.findOne({ _id: currentId, ownerId });
+                const currentFolder: IFolder | null = await folderRepository.findById(currentId, ownerId);
                 if (currentFolder) {
                     path.unshift({ _id: currentFolder._id, name: currentFolder.name });
                     currentId = currentFolder.parentFolderId ? currentFolder.parentFolderId.toString() : null;
@@ -42,36 +42,35 @@ class FoldersService {
     }
 
     async renameFolder(folderId: string, name: string, ownerId: string) {
-        const folder = await Folder.findOne({ _id: folderId, ownerId });
+        const folder = await folderRepository.findById(folderId, ownerId);
         if (!folder) {
             throw ApiError.NotFound('Folder not found');
         }
 
         // Check for collisions in both files and folders
-        const collisionFile = await File.findOne({
+        const collisionFile = await fileRepository.checkNameCollision(
             ownerId,
-            parentFolderId: folder.parentFolderId,
+            folder.parentFolderId?.toString() || null,
             name
-        });
+        );
 
-        const collisionFolder = await Folder.findOne({
+        const collisionFolder = await folderRepository.checkNameCollision(
             ownerId,
-            parentFolderId: folder.parentFolderId,
+            folder.parentFolderId?.toString() || null,
             name,
-            _id: { $ne: folderId }
-        });
+            folderId
+        );
 
         if (collisionFile || collisionFolder) {
             throw ApiError.BadRequest('A file or folder with this name already exists in this directory');
         }
 
-        folder.name = name;
-        await folder.save();
-        return folder;
+        const updatedFolder = await folderRepository.update(folderId, { name });
+        return updatedFolder;
     }
 
     async moveFolder(folderId: string, newParentId: string | null, ownerId: string) {
-        const folder = await Folder.findOne({ _id: folderId, ownerId });
+        const folder = await folderRepository.findById(folderId, ownerId);
         if (!folder) {
             throw ApiError.NotFound('Folder not found');
         }
@@ -87,40 +86,41 @@ class FoldersService {
                 if (currentParentId === folderId) {
                     throw ApiError.BadRequest('Cannot move folder into its own subfolder');
                 }
-                const parentFolder: IFolder | null = await Folder.findOne({ _id: currentParentId, ownerId });
+                const parentFolder: IFolder | null = await folderRepository.findById(currentParentId, ownerId);
                 currentParentId = parentFolder?.parentFolderId ? parentFolder.parentFolderId.toString() : null;
             }
         }
 
-        folder.parentFolderId = newParentId ? new Types.ObjectId(newParentId) : null;
-        await folder.save();
-        return folder;
+        const updatedFolder = await folderRepository.update(folderId, {
+            parentFolderId: newParentId ? new Types.ObjectId(newParentId) : null
+        });
+        return updatedFolder;
     }
 
     async deleteFolder(folderId: string, ownerId: string, tgCredentials: { botToken: string; chatId: string }) {
-        const folder = await Folder.findOne({ _id: folderId, ownerId });
+        const folder = await folderRepository.findById(folderId, ownerId);
         if (!folder) {
             throw ApiError.NotFound('Folder not found');
         }
 
         // Recursively delete subfolders
-        const subfolders = await Folder.find({ parentFolderId: folderId, ownerId });
+        const subfolders = await folderRepository.find({ parentFolderId: folderId, ownerId });
         for (const subfolder of subfolders) {
             await this.deleteFolder(subfolder._id.toString(), ownerId, tgCredentials);
         }
 
         // Delete files in this folder
-        const files = await File.find({ parentFolderId: folderId, ownerId });
+        const files = await fileRepository.find({ parentFolderId: folderId, ownerId });
         for (const file of files) {
             await filesService.deleteFile(file._id.toString(), ownerId, tgCredentials);
         }
 
-        await folder.deleteOne();
+        await folderRepository.delete(folderId);
         return { message: 'Folder and contents deleted' };
     }
 
     async getTree(ownerId: string) {
-        const folders = await Folder.find({ ownerId });
+        const folders = await folderRepository.find({ ownerId });
 
         // Build map for O(n) access
         const folderMap: any = {};
