@@ -5,6 +5,8 @@ import { validationResult } from 'express-validator';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import foldersService from '../services/folders.service';
 import { Types } from 'mongoose';
+import { FolderDto } from '../dtos/folder.dto';
+import { FileDto } from '../dtos/file.dto';
 
 const createFolderSchema = z.object({
     name: z.string().min(1),
@@ -17,7 +19,7 @@ class FoldersController {
             const authRequest = req as AuthRequest;
             const { name, parentFolderId } = createFolderSchema.parse(authRequest.body);
             const folder = await foldersService.createFolder(name, parentFolderId || null, authRequest.user.id);
-            return res.status(201).json(folder);
+            return res.status(201).json(new FolderDto(folder));
         } catch (error) {
             next(error);
         }
@@ -28,7 +30,12 @@ class FoldersController {
             const authRequest = req as AuthRequest;
             const parentId = typeof req.query.parentId === 'string' ? req.query.parentId : null;
             const contents = await foldersService.getFolderContents(parentId, authRequest.user.id);
-            return res.json(contents);
+
+            return res.json({
+                files: contents.files.map(file => new FileDto(file)),
+                folders: contents.folders.map(folder => new FolderDto(folder)),
+                path: contents.path
+            });
         } catch (error) {
             next(error);
         }
@@ -45,7 +52,10 @@ class FoldersController {
             }
 
             const folder = await foldersService.renameFolder(folderId, name, authRequest.user.id);
-            return res.json(folder);
+            if (!folder) {
+                throw new Error('Folder not found');
+            }
+            return res.json(new FolderDto(folder));
         } catch (error) {
             next(error);
         }
@@ -58,7 +68,10 @@ class FoldersController {
             const { parentFolderId } = req.body;
 
             const folder = await foldersService.moveFolder(folderId, parentFolderId as string | null, authRequest.user.id);
-            return res.json(folder);
+            if (!folder) {
+                throw new Error('Folder not found');
+            }
+            return res.json(new FolderDto(folder));
         } catch (error) {
             next(error);
         }
@@ -80,6 +93,7 @@ class FoldersController {
         try {
             const authRequest = req as AuthRequest;
             const tree = await foldersService.getTree(authRequest.user.id);
+            // Tree might be complex structure, for now just returning as is but ideally should be mapped if it contains raw mongoose docs
             return res.json(tree);
         } catch (error) {
             next(error);

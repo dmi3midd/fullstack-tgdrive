@@ -18,10 +18,10 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ path, onFolderClick })
             </button>
 
             {path.map((item, index) => (
-                <React.Fragment key={item._id}>
+                <React.Fragment key={item.id}>
                     <ChevronRight size={12} className="shrink-0 opacity-30" />
                     <button
-                        onClick={() => onFolderClick(item._id)}
+                        onClick={() => onFolderClick(item.id)}
                         className={`text-[10px] font-black uppercase tracking-[0.2em] whitespace-nowrap px-2 py-1.5 rounded-lg transition-all shrink-0
                             ${index === path.length - 1
                                 ? 'text-brand-accent bg-brand-accent/10 border border-brand-accent/20'

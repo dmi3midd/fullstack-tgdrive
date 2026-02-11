@@ -1,23 +1,25 @@
 export interface FileItem {
-    _id: string;
+    id: string;
     name: string;
     size: number;
     mimeType: string;
     parentFolderId: string | null;
     updatedAt: string;
     createdAt: string;
+    ownerId: string;
 }
 
 export interface FolderItem {
-    _id: string;
+    id: string;
     name: string;
     parentFolderId: string | null;
     createdAt: string;
     updatedAt: string;
+    ownerId: string;
 }
 
 export interface FileSystemItem {
-    _id: string;
+    id: string;
     name: string;
     type: 'file' | 'folder';
     size?: number;
@@ -26,7 +28,7 @@ export interface FileSystemItem {
 }
 
 export interface FolderPathItem {
-    _id: string;
+    id: string;
     name: string;
 }
 

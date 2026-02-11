@@ -25,11 +25,11 @@ export const FileGrid: React.FC<FileGridProps> = ({
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
                 {files.map(file => (
                     <div
-                        key={file._id}
+                        key={file.id}
                         className="group relative bg-brand-surface/20 border border-brand-accent/5 rounded-3xl p-6 hover:bg-brand-surface/60 hover:border-brand-accent/20 hover:shadow-2xl transition-all cursor-pointer text-center flex flex-col items-center gap-4"
-                        onContextMenu={(e) => onContextMenu(e, 'file', file._id, file.name)}
+                        onContextMenu={(e) => onContextMenu(e, 'file', file.id, file.name)}
                         draggable
-                        onDragStart={(e) => onDragStart(e, 'file', file._id, file.name)}
+                        onDragStart={(e) => onDragStart(e, 'file', file.id, file.name)}
                     >
                         <div className="relative">
                             <div className="bg-brand-muted/10 p-5 rounded-[1.5rem] group-hover:bg-brand-accent group-hover:text-brand-bg transition-all shadow-inner">
@@ -43,7 +43,7 @@ export const FileGrid: React.FC<FileGridProps> = ({
 
                         <button
                             className="absolute top-3 right-3 p-1.5 opacity-0 group-hover:opacity-100 hover:bg-brand-muted/20 rounded-lg text-brand-accent/40 hover:text-brand-accent transition-all"
-                            onClick={(e) => { e.stopPropagation(); onContextMenu(e as any, 'file', file._id, file.name); }}
+                            onClick={(e) => { e.stopPropagation(); onContextMenu(e as any, 'file', file.id, file.name); }}
                         >
                             <MoreHorizontal size={18} />
                         </button>

@@ -5,6 +5,7 @@ import multer from 'multer';
 import filesService from '../services/files.service';
 import ApiError from '../exceptions/api.error';
 import { AuthRequest } from '../middlewares/auth.middleware';
+import { FileDto } from '../dtos/file.dto';
 
 class FilesController {
     async uploadFile(req: Request, res: Response, next: NextFunction) {
@@ -24,7 +25,7 @@ class FilesController {
                 parentFolderId
             );
 
-            return res.status(201).json(uploadedFile);
+            return res.status(201).json(new FileDto(uploadedFile));
         } catch (error) {
             next(error);
         }
@@ -41,7 +42,7 @@ class FilesController {
                 authReq.tgCredentials
             );
 
-            return res.json({ file, downloadLink: fileLink });
+            return res.json({ file: new FileDto(file), downloadLink: fileLink });
         } catch (error) {
             next(error);
         }
@@ -78,7 +79,10 @@ class FilesController {
             }
 
             const updatedFile = await filesService.renameFile(fileId, name, authReq.user.id);
-            return res.json(updatedFile);
+            if (!updatedFile) {
+                throw ApiError.NotFound('File not found');
+            }
+            return res.json(new FileDto(updatedFile));
         } catch (error) {
             next(error);
         }
@@ -91,7 +95,10 @@ class FilesController {
             const { parentFolderId } = req.body;
 
             const updatedFile = await filesService.moveFile(fileId, parentFolderId as string | null, authReq.user.id);
-            return res.json(updatedFile);
+            if (!updatedFile) {
+                throw ApiError.NotFound('File not found');
+            }
+            return res.json(new FileDto(updatedFile));
         } catch (error) {
             next(error);
         }

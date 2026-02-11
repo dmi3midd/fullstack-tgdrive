@@ -16,7 +16,7 @@ interface MoveDialogProps {
 }
 
 interface FolderNode {
-    _id: string;
+    id: string;
     name: string;
     parentFolderId: string | null;
     children: FolderNode[];
@@ -67,8 +67,8 @@ export const MoveDialog: React.FC<MoveDialogProps> = ({ open, onClose, item, cur
         const ids = new Set<string>();
         const findDescendants = (nodes: FolderNode[]) => {
             for (const node of nodes) {
-                if (node._id === item.id || ids.has(node.parentFolderId || '')) {
-                    ids.add(node._id);
+                if (node.id === item.id || ids.has(node.parentFolderId || '')) {
+                    ids.add(node.id);
                 }
                 if (node.children.length > 0) {
                     findDescendants(node.children);
@@ -80,7 +80,7 @@ export const MoveDialog: React.FC<MoveDialogProps> = ({ open, onClose, item, cur
         const allNodesMap = new Map<string, FolderNode>();
         const mapNodes = (nodes: FolderNode[]) => {
             nodes.forEach(n => {
-                allNodesMap.set(n._id, n);
+                allNodesMap.set(n.id, n);
                 mapNodes(n.children);
             });
         };
@@ -120,16 +120,16 @@ export const MoveDialog: React.FC<MoveDialogProps> = ({ open, onClose, item, cur
         }
     };
 
-    const renderTreeItem = (node: FolderNode | { _id: null, name: string, children: FolderNode[] }, depth: number) => {
-        const id = node._id || 'root';
-        const isSelected = selectedFolderId === node._id;
+    const renderTreeItem = (node: FolderNode | { id: null, name: string, children: FolderNode[] }, depth: number) => {
+        const id = node.id || 'root';
+        const isSelected = selectedFolderId === node.id;
         const isExpanded = expandedFolders.has(id);
         const hasChildren = node.children && node.children.length > 0;
-        const isDisabled = item?.type === 'folder' && node._id && descendantIds.has(node._id);
-        const isCurrentParent = node._id === currentFolderId;
+        const isDisabled = item?.type === 'folder' && node.id && descendantIds.has(node.id);
+        const isCurrentParent = node.id === currentFolderId;
 
         // Simple search filtering
-        if (searchQuery && node._id !== null && !node.name.toLowerCase().includes(searchQuery.toLowerCase())) {
+        if (searchQuery && node.id !== null && !node.name.toLowerCase().includes(searchQuery.toLowerCase())) {
             // If it doesn't match, check if any children match
             const hasMatchingChild = (n: FolderNode): boolean => {
                 if (n.name.toLowerCase().includes(searchQuery.toLowerCase())) return true;
@@ -141,7 +141,7 @@ export const MoveDialog: React.FC<MoveDialogProps> = ({ open, onClose, item, cur
         return (
             <div key={id} className="select-none">
                 <div
-                    onClick={() => !isDisabled && setSelectedFolderId(node._id)}
+                    onClick={() => !isDisabled && setSelectedFolderId(node.id)}
                     className={`flex items-center gap-2 py-2 px-3 rounded-xl cursor-pointer transition-all
                         ${isSelected ? 'bg-brand-accent text-brand-bg shadow-lg shadow-brand-accent/20' : 'hover:bg-brand-muted/20'}
                         ${isDisabled ? 'opacity-30 cursor-not-allowed grayscale' : ''}
@@ -163,7 +163,7 @@ export const MoveDialog: React.FC<MoveDialogProps> = ({ open, onClose, item, cur
                     {isSelected ? <FolderOpen size={18} className="shrink-0" /> : <Folder size={18} className="shrink-0 opacity-60" />}
                     <span className="text-sm font-bold truncate uppercase tracking-tight">
                         {node.name}
-                        {isCurrentParent && node._id !== null && <span className="ml-2 text-[10px] opacity-40">(Current)</span>}
+                        {isCurrentParent && node.id !== null && <span className="ml-2 text-[10px] opacity-40">(Current)</span>}
                     </span>
                 </div>
                 {isExpanded && node.children.map(child => renderTreeItem(child, depth + 1))}
@@ -191,7 +191,7 @@ export const MoveDialog: React.FC<MoveDialogProps> = ({ open, onClose, item, cur
                             <p className="text-[10px] font-black uppercase tracking-widest text-brand-accent/40">Mapping Structure...</p>
                         </div>
                     ) : (
-                        renderTreeItem({ _id: null, name: 'Root Directory', children: tree }, 0)
+                        renderTreeItem({ id: null, name: 'Root Directory', children: tree }, 0)
                     )}
                 </div>
 
@@ -200,7 +200,7 @@ export const MoveDialog: React.FC<MoveDialogProps> = ({ open, onClose, item, cur
                         <p className="text-[9px] font-black uppercase tracking-widest text-brand-accent/30">Target Destination</p>
                         <p className="text-xs font-bold text-brand-text truncate max-w-[200px]">
                             {selectedFolderId === null ? 'Root Directory' : (
-                                tree.find(f => f._id === selectedFolderId)?.name ||
+                                tree.find(f => f.id === selectedFolderId)?.name ||
                                 // This won't find nested ones easily, maybe just show it if we find it
                                 'Selected Folder'
                             )}
