@@ -34,7 +34,7 @@ class FoldersController {
             return res.json({
                 files: contents.files.map(file => new FileDto(file)),
                 folders: contents.folders.map(folder => new FolderDto(folder)),
-                path: contents.path
+                path: contents.path.map((p: any) => ({ id: p._id.toString(), name: p.name }))
             });
         } catch (error) {
             next(error);
