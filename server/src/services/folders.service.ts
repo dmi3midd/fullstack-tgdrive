@@ -20,13 +20,15 @@ class FoldersService {
     }
 
     async getFolderContents(parentId: string | null, ownerId: string) {
-        const query = {
-            ownerId,
-            parentFolderId: parentId ? new Types.ObjectId(parentId) : null
-        };
+        const folders = await folderRepository.query()
+            .byOwner(ownerId)
+            .inFolder(parentId)
+            .findMany();
 
-        const folders = await folderRepository.find(query);
-        const files = await fileRepository.find(query);
+        const files = await fileRepository.query()
+            .byOwner(ownerId)
+            .inFolder(parentId)
+            .findMany();
 
         const path: any[] = [];
         if (parentId) {
@@ -114,13 +116,21 @@ class FoldersService {
         }
 
         // Recursively delete subfolders
-        const subfolders = await folderRepository.find({ parentFolderId: folderId, ownerId });
+        const subfolders = await folderRepository.query()
+            .byOwner(ownerId)
+            .inFolder(folderId)
+            .findMany();
+
         for (const subfolder of subfolders) {
             await this.deleteFolder(subfolder._id.toString(), ownerId, tgCredentials);
         }
 
         // Delete files in this folder
-        const files = await fileRepository.find({ parentFolderId: folderId, ownerId });
+        const files = await fileRepository.query()
+            .byOwner(ownerId)
+            .inFolder(folderId)
+            .findMany();
+
         for (const file of files) {
             await filesService.deleteFile(file._id.toString(), ownerId, tgCredentials);
         }
@@ -133,7 +143,9 @@ class FoldersService {
     }
 
     async getTree(ownerId: string) {
-        const folders = await folderRepository.find({ ownerId });
+        const folders = await folderRepository.query()
+            .byOwner(ownerId)
+            .findMany();
 
         // Build map for O(n) access
         const folderMap: any = {};

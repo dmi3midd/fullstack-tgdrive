@@ -1,4 +1,5 @@
 import { Document, Model, Types } from 'mongoose';
+import { QueryBuilder } from './query.builder';
 
 export interface OwnedDocument extends Document {
     ownerId: Types.ObjectId;
@@ -8,6 +9,10 @@ export interface OwnedDocument extends Document {
 
 export abstract class BaseRepository<T extends OwnedDocument> {
     protected abstract model: Model<T>;
+
+    query(): QueryBuilder<T> {
+        return new QueryBuilder<T>(this.model);
+    }
 
     async create(data: Partial<T>): Promise<T> {
         return this.model.create(data as any);
@@ -23,17 +28,16 @@ export abstract class BaseRepository<T extends OwnedDocument> {
         name: string,
         excludeId?: string
     ): Promise<T | null> {
-        const query: any = {
-            ownerId,
-            parentFolderId: parentFolderId || null,
-            name,
-        };
+        const builder = this.query()
+            .byOwner(ownerId)
+            .inFolder(parentFolderId)
+            .withName(name);
 
         if (excludeId) {
-            query._id = { $ne: excludeId };
+            builder.excludeId(excludeId);
         }
 
-        return this.model.findOne(query);
+        return builder.findOne();
     }
 
     async delete(id: string): Promise<void> {
@@ -44,6 +48,7 @@ export abstract class BaseRepository<T extends OwnedDocument> {
         return this.model.findByIdAndUpdate(id, updateData, { new: true });
     }
 
+    /** @deprecated Use query().findMany() instead */
     async find(query: any): Promise<T[]> {
         return this.model.find(query);
     }
