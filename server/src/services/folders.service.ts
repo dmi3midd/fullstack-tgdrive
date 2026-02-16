@@ -5,8 +5,9 @@ import filesService from './files.service';
 import folderRepository from '../repositories/folder.repository';
 import fileRepository from '../repositories/file.repository';
 import eventManager, { EventType } from '../events/event.manager';
+import { IFoldersService } from './interfaces';
 
-class FoldersService {
+class FoldersService implements IFoldersService {
     async createFolder(name: string, parentFolderId: string | null, ownerId: string) {
         const folder = await folderRepository.create({
             ownerId: new Types.ObjectId(ownerId) as any,

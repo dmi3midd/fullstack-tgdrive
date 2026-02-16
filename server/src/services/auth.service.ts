@@ -6,9 +6,10 @@ import { User } from "../models/user.model";
 import { UserDto } from '../dtos/user.dto';
 import tokenService from './token.service';
 import ApiError from '../exceptions/api.error';
+import { IAuthService } from './interfaces';
 
 
-class AuthService {
+class AuthService implements IAuthService {
     async registration(email: string, password: string, botToken: string, chatId: string) {
         const candidate = await User.findOne({ email });
         if (candidate) {

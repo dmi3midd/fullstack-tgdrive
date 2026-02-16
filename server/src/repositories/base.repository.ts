@@ -48,7 +48,6 @@ export abstract class BaseRepository<T extends OwnedDocument> {
         return this.model.findByIdAndUpdate(id, updateData, { new: true });
     }
 
-    /** @deprecated Use query().findMany() instead */
     async find(query: any): Promise<T[]> {
         return this.model.find(query);
     }

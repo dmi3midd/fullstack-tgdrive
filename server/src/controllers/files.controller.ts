@@ -1,7 +1,4 @@
 import { Request, Response, NextFunction } from 'express';
-import { z } from 'zod';
-import { validationResult } from 'express-validator';
-import multer from 'multer';
 import filesService from '../services/files.service';
 import ApiError from '../exceptions/api.error';
 import { AuthRequest } from '../middlewares/auth.middleware';

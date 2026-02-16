@@ -1,10 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
-import { validationResult } from 'express-validator';
 
 import { AuthRequest } from '../middlewares/auth.middleware';
 import foldersService from '../services/folders.service';
-import { Types } from 'mongoose';
 import { FolderDto } from '../dtos/folder.dto';
 import { FileDto } from '../dtos/file.dto';
 

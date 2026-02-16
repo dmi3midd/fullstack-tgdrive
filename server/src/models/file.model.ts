@@ -3,7 +3,7 @@ import { Schema, model, Document, Types } from 'mongoose';
 export interface IFile extends Document {
     ownerId: Types.ObjectId;
     telegramMessageId: number;
-    telegramFileId?: string; // Cache for downloading
+    telegramFileId?: string;
     name: string;
     size: number;
     mimeType: string;

@@ -1,6 +1,3 @@
-
-
-
 import { Stream } from 'stream';
 import { TelegramServiceFactory } from '../factories/telegram.factory';
 import fileRepository from '../repositories/file.repository';
@@ -8,8 +5,9 @@ import folderRepository from '../repositories/folder.repository';
 import ApiError from '../exceptions/api.error';
 import { Types } from 'mongoose';
 import eventManager, { EventType } from '../events/event.manager';
+import { IFilesService } from './interfaces';
 
-class FilesService {
+class FilesService implements IFilesService {
     async uploadFile(
         file: Express.Multer.File,
         ownerId: string,
@@ -18,7 +16,6 @@ class FilesService {
     ) {
         const telegramService = TelegramServiceFactory.getInstance(tgCredentials.botToken);
 
-        // Convert Buffer to Stream
         const fileStream = Stream.Readable.from(file.buffer);
 
         try {

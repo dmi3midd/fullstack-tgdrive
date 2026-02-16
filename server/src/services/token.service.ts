@@ -2,6 +2,7 @@ import jwt, { type JwtPayload, type SignOptions } from 'jsonwebtoken';
 import { IToken, Token } from '../models/token.model';
 import { config } from '../config/env.config';
 import { UserDto } from '../dtos/user.dto';
+import { ITokenService } from './interfaces';
 
 
 const JWT_ACCESS_SECRET = config.jwtAccessSecret;
@@ -10,7 +11,7 @@ const JWT_ACCESS_EXPIRATION = config.jwtAccessExpiresIn;
 const JWT_REFRESH_EXPIRATION = config.jwtRefreshExpiresIn;
 
 
-class TokenService {
+class TokenService implements ITokenService {
     generateTokens(payload: UserDto): { accessToken: string; refreshToken: string } {
         const accessToken = jwt.sign(
             payload,
