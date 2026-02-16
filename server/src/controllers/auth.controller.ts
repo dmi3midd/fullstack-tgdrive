@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { validationResult } from 'express-validator';
 import ApiError from '../exceptions/api.error';
 
-import authService from '../services/auth.service';
+import authFacade from '../facades/auth.facade';
 
 const registrationSchema = z.object({
     email: z.string(),
@@ -24,7 +24,7 @@ class AuthController {
                 return next(ApiError.BadRequest("Validation error", errors.array().map(error => error.msg)));
             }
             const { email, password, botToken, chatId } = registrationSchema.parse(req.body);
-            const adminData = await authService.registration(email, password, botToken, chatId);
+            const adminData = await authFacade.registration(email, password, botToken, chatId);
             res.cookie('refreshToken', adminData.refreshToken, { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true })
             return res.json(adminData);
         } catch (error) {
@@ -39,7 +39,7 @@ class AuthController {
                 return next(ApiError.BadRequest("Validation error", errors.array().map(error => error.msg)));
             }
             const { email, password } = loginSchema.parse(req.body);
-            const adminData = await authService.login(email, password);
+            const adminData = await authFacade.login(email, password);
             res.cookie('refreshToken', adminData.refreshToken, { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true })
             return res.json(adminData);
         } catch (error) {
@@ -53,7 +53,7 @@ class AuthController {
                 return next(ApiError.BadRequest("Validation error", errors.array().map(error => error.msg)));
             }
             const { refreshToken } = req.cookies;
-            const token = await authService.logout(refreshToken);
+            const token = await authFacade.logout(refreshToken);
             res.clearCookie('refreshToken');
             return res.json(token);
         } catch (error) {
@@ -68,7 +68,7 @@ class AuthController {
                 return next(ApiError.BadRequest("Validation error", errors.array().map(error => error.msg)));
             }
             const { refreshToken } = req.cookies;
-            const adminData = await authService.refresh(refreshToken);
+            const adminData = await authFacade.refresh(refreshToken);
             res.cookie('refreshToken', adminData.refreshToken, { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true })
             return res.json(adminData);
         } catch (error) {

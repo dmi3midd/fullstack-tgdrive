@@ -1,21 +1,21 @@
 import { Stream } from 'stream';
-import telegramServiceFactory from '../factories/telegram.factory';
+import telegramServiceFlyweight from '../flyweights/telegram.flyweight';
 import { File, IFile } from '../models/file.model';
 import { Folder, IFolder } from '../models/folder.model';
 import ApiError from '../exceptions/api.error';
 import { Types } from 'mongoose';
-import eventManager, { EventType } from '../events/event.manager';
+import filesObserver, { EventType } from '../observers/files.observer';
 import { QueryBuilder } from '../builders/query.builder';
-import { IFilesService } from './interfaces';
+import { IFilesFacade } from './interfaces';
 
-class FilesService implements IFilesService {
+class FilesFacade implements IFilesFacade {
     async uploadFile(
         file: Express.Multer.File,
         ownerId: string,
         tgCredentials: { botToken: string; chatId: string },
         parentFolderId: string | null = null
     ) {
-        const telegramService = telegramServiceFactory.getInstance(tgCredentials.botToken);
+        const telegramService = telegramServiceFlyweight.getInstance(tgCredentials.botToken);
 
         const fileStream = Stream.Readable.from(file.buffer);
 
@@ -36,7 +36,7 @@ class FilesService implements IFilesService {
                 telegramFileId: fileId,
             });
 
-            eventManager.emit(EventType.FILE_UPLOADED, newFile);
+            filesObserver.emit(EventType.FILE_UPLOADED, newFile);
 
             return newFile;
         } catch (error: any) {
@@ -55,10 +55,10 @@ class FilesService implements IFilesService {
             throw ApiError.BadRequest('File not uploaded to Telegram correctly');
         }
 
-        const telegramService = telegramServiceFactory.getInstance(tgCredentials.botToken);
+        const telegramService = telegramServiceFlyweight.getInstance(tgCredentials.botToken);
         const fileLink = await telegramService.getFileLink(file.telegramFileId);
 
-        eventManager.emit(EventType.FILE_DOWNLOADED, { fileId, ownerId });
+        filesObserver.emit(EventType.FILE_DOWNLOADED, { fileId, ownerId });
 
         return {
             file,
@@ -76,7 +76,7 @@ class FilesService implements IFilesService {
             throw ApiError.BadRequest('File not uploaded to Telegram correctly');
         }
 
-        const telegramService = telegramServiceFactory.getInstance(tgCredentials.botToken);
+        const telegramService = telegramServiceFlyweight.getInstance(tgCredentials.botToken);
         const stream = await telegramService.getFileStream(file.telegramFileId);
 
         return {
@@ -112,7 +112,7 @@ class FilesService implements IFilesService {
 
         const updatedFile = await File.findByIdAndUpdate(fileId, { name }, { new: true });
 
-        eventManager.emit(EventType.FILE_RENAMED, updatedFile);
+        filesObserver.emit(EventType.FILE_RENAMED, updatedFile);
 
         return updatedFile;
     }
@@ -127,7 +127,7 @@ class FilesService implements IFilesService {
             parentFolderId: parentFolderId ? new Types.ObjectId(parentFolderId) : null
         }, { new: true });
 
-        eventManager.emit(EventType.FILE_MOVED, updatedFile);
+        filesObserver.emit(EventType.FILE_MOVED, updatedFile);
 
         return updatedFile;
     }
@@ -138,16 +138,16 @@ class FilesService implements IFilesService {
             throw ApiError.NotFound('File not found');
         }
 
-        const telegramService = telegramServiceFactory.getInstance(tgCredentials.botToken);
+        const telegramService = telegramServiceFlyweight.getInstance(tgCredentials.botToken);
         await telegramService.deleteMessage(tgCredentials.chatId, file.telegramMessageId);
 
         await File.deleteOne({ _id: fileId });
 
-        eventManager.emit(EventType.FILE_DELETED, { fileId, ownerId });
+        filesObserver.emit(EventType.FILE_DELETED, { fileId, ownerId });
 
         return file;
     }
 }
 
 
-export default new FilesService();
+export default new FilesFacade();

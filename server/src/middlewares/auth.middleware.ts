@@ -3,7 +3,7 @@ import CryptoJS from 'crypto-js';
 
 import { User } from '../models/user.model';
 import { UserDto } from '../dtos/user.dto';
-import tokenService from '../services/token.service';
+import tokenUtil from '../utils/token.util';
 import { config } from '../config/env.config';
 import ApiError from '../exceptions/api.error';
 
@@ -30,7 +30,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
             return next(ApiError.Unauthorized());
         }
 
-        const payload = tokenService.validateAccessToken(token);
+        const payload = tokenUtil.validateAccessToken(token);
 
         const user = await User.findById(payload?.id);
         if (!user) {

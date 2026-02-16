@@ -6,7 +6,7 @@ export interface AuthTokensResponse {
     user: UserDto;
 }
 
-export interface IAuthService {
+export interface IAuthFacade {
     registration(email: string, password: string, botToken: string, chatId: string): Promise<AuthTokensResponse>;
     login(email: string, password: string): Promise<AuthTokensResponse>;
     logout(refreshToken: string): Promise<any>;

@@ -4,12 +4,12 @@ import CryptoJS from 'crypto-js';
 import { config } from '../config/env.config';
 import { User } from "../models/user.model";
 import { UserDto } from '../dtos/user.dto';
-import tokenService from './token.service';
+import tokenUtil from '../utils/token.util';
 import ApiError from '../exceptions/api.error';
-import { IAuthService } from './interfaces';
+import { IAuthFacade } from './interfaces';
 
 
-class AuthService implements IAuthService {
+class AuthFacade implements IAuthFacade {
     async registration(email: string, password: string, botToken: string, chatId: string) {
         const candidate = await User.findOne({ email });
         if (candidate) {
@@ -20,8 +20,8 @@ class AuthService implements IAuthService {
         const encryptedChatId = CryptoJS.AES.encrypt(chatId, config.encryptionKey).toString();
         const user = await User.create({ email, passwordHash: hashedPassword, encryptedBotToken, encryptedChatId });
         const userDto = new UserDto(user);
-        const tokens = tokenService.generateTokens({ ...userDto });
-        await tokenService.saveToken(userDto.id, tokens.refreshToken);
+        const tokens = tokenUtil.generateTokens({ ...userDto });
+        await tokenUtil.saveToken(userDto.id, tokens.refreshToken);
         return {
             ...tokens,
             user: userDto,
@@ -38,8 +38,8 @@ class AuthService implements IAuthService {
             throw ApiError.BadRequest('Invalid password');
         }
         const userDto = new UserDto(user);
-        const tokens = tokenService.generateTokens({ ...userDto });
-        await tokenService.saveToken(userDto.id, tokens.refreshToken);
+        const tokens = tokenUtil.generateTokens({ ...userDto });
+        await tokenUtil.saveToken(userDto.id, tokens.refreshToken);
         return {
             ...tokens,
             user: userDto,
@@ -47,7 +47,7 @@ class AuthService implements IAuthService {
     }
 
     async logout(refreshToken: string) {
-        const token = await tokenService.removeToken(refreshToken);
+        const token = await tokenUtil.removeToken(refreshToken);
         return token;
     }
 
@@ -55,8 +55,8 @@ class AuthService implements IAuthService {
         if (!refreshToken) {
             throw ApiError.Unauthorized();
         }
-        const userData = tokenService.validateRefreshToken(refreshToken);
-        const foundToken = await tokenService.findToken(refreshToken);
+        const userData = tokenUtil.validateRefreshToken(refreshToken);
+        const foundToken = await tokenUtil.findToken(refreshToken);
         if (!userData || !foundToken) {
             throw ApiError.Unauthorized();
         }
@@ -65,8 +65,8 @@ class AuthService implements IAuthService {
             throw ApiError.NotFound('User not found');
         }
         const userDto = new UserDto(user);
-        const tokens = tokenService.generateTokens({ ...userDto });
-        await tokenService.saveToken(userDto.id, tokens.refreshToken);
+        const tokens = tokenUtil.generateTokens({ ...userDto });
+        await tokenUtil.saveToken(userDto.id, tokens.refreshToken);
         return {
             ...tokens,
             user: userDto,
@@ -74,4 +74,4 @@ class AuthService implements IAuthService {
     }
 }
 
-export default new AuthService();
+export default new AuthFacade();

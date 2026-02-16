@@ -16,7 +16,7 @@ export interface FileStreamResult {
     stream: Stream;
 }
 
-export interface IFilesService {
+export interface IFilesFacade {
     uploadFile(
         file: Express.Multer.File,
         ownerId: string,

@@ -1,6 +1,6 @@
 import { IFolder } from '../../models/folder.model';
 import { IFile } from '../../models/file.model';
-import { TgCredentials } from './files.service.interface';
+import { TgCredentials } from './files.facade.interface';
 
 export interface BreadcrumbItem {
     _id: unknown;
@@ -21,7 +21,7 @@ export interface FolderTreeNode {
     children: FolderTreeNode[];
 }
 
-export interface IFoldersService {
+export interface IFoldersFacade {
     createFolder(name: string, parentFolderId: string | null, ownerId: string): Promise<IFolder>;
     getFolderContents(parentId: string | null, ownerId: string): Promise<FolderContents>;
     renameFolder(folderId: string, name: string, ownerId: string): Promise<IFolder | null>;

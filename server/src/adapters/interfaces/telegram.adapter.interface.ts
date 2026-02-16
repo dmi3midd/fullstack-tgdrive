@@ -5,7 +5,7 @@ export interface TelegramUploadResult {
     fileId: string;
 }
 
-export interface ITelegramService {
+export interface ITelegramAdapter {
     validateBot(): Promise<boolean>;
     sendTestMessage(chatId: string): Promise<boolean>;
     uploadFile(chatId: string, fileStream: Stream, fileName: string): Promise<TelegramUploadResult>;

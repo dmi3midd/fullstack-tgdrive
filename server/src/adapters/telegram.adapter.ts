@@ -1,9 +1,9 @@
 import axios from 'axios';
 import FormData from 'form-data';
 import { Stream } from 'stream';
-import { ITelegramService } from './interfaces';
+import { ITelegramAdapter } from './interfaces';
 
-export class TelegramService implements ITelegramService {
+export class TelegramAdapter implements ITelegramAdapter {
     private readonly baseUrl: string;
 
     constructor(private readonly botToken: string) {

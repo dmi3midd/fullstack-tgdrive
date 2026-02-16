@@ -1,4 +1,4 @@
-import eventManager, { EventType } from '../events/event.manager';
+import eventManager, { EventType } from '../observers/files.observer';
 import { logger } from '../config/logger.config';
 
 class LoggingSubscriber {

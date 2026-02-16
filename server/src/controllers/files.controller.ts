@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import filesService from '../services/files.service';
+import filesFacade from '../facades/files.facade';
 import ApiError from '../exceptions/api.error';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import { FileDto } from '../dtos/file.dto';
@@ -15,7 +15,7 @@ class FilesController {
                 throw ApiError.BadRequest('No file uploaded');
             }
 
-            const uploadedFile = await filesService.uploadFile(
+            const uploadedFile = await filesFacade.uploadFile(
                 file,
                 authReq.user.id,
                 authReq.tgCredentials,
@@ -33,7 +33,7 @@ class FilesController {
             const authReq = req as AuthRequest;
             const fileId = req.params.id as string;
 
-            const { file, fileLink } = await filesService.downloadFile(
+            const { file, fileLink } = await filesFacade.downloadFile(
                 fileId,
                 authReq.user.id,
                 authReq.tgCredentials
@@ -50,7 +50,7 @@ class FilesController {
             const authReq = req as AuthRequest;
             const fileId = req.params.id as string;
 
-            const { file, stream } = await filesService.getFileStreamWithMetadata(
+            const { file, stream } = await filesFacade.getFileStreamWithMetadata(
                 fileId,
                 authReq.user.id,
                 authReq.tgCredentials
@@ -75,7 +75,7 @@ class FilesController {
                 throw ApiError.BadRequest('New name is required');
             }
 
-            const updatedFile = await filesService.renameFile(fileId, name, authReq.user.id);
+            const updatedFile = await filesFacade.renameFile(fileId, name, authReq.user.id);
             if (!updatedFile) {
                 throw ApiError.NotFound('File not found');
             }
@@ -91,7 +91,7 @@ class FilesController {
             const fileId = req.params.id as string;
             const { parentFolderId } = req.body;
 
-            const updatedFile = await filesService.moveFile(fileId, parentFolderId as string | null, authReq.user.id);
+            const updatedFile = await filesFacade.moveFile(fileId, parentFolderId as string | null, authReq.user.id);
             if (!updatedFile) {
                 throw ApiError.NotFound('File not found');
             }
@@ -106,7 +106,7 @@ class FilesController {
             const authReq = req as AuthRequest;
             const fileId = req.params.id as string;
 
-            await filesService.deleteFile(fileId, authReq.user.id, authReq.tgCredentials);
+            await filesFacade.deleteFile(fileId, authReq.user.id, authReq.tgCredentials);
             return res.json({ message: 'File deleted successfully' });
         } catch (error) {
             next(error);

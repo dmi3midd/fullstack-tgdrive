@@ -6,7 +6,7 @@ export interface TokenPair {
     refreshToken: string;
 }
 
-export interface ITokenService {
+export interface ITokenUtil {
     generateTokens(payload: UserDto): TokenPair;
     validateAccessToken(token: string): UserDto | null;
     validateRefreshToken(token: string): UserDto | null;

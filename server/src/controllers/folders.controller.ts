@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 
 import { AuthRequest } from '../middlewares/auth.middleware';
-import foldersService from '../services/folders.service';
+import foldersFacade from '../facades/folders.facade';
 import { FolderDto } from '../dtos/folder.dto';
 import { FileDto } from '../dtos/file.dto';
 
@@ -16,7 +16,7 @@ class FoldersController {
         try {
             const authRequest = req as AuthRequest;
             const { name, parentFolderId } = createFolderSchema.parse(authRequest.body);
-            const folder = await foldersService.createFolder(name, parentFolderId || null, authRequest.user.id);
+            const folder = await foldersFacade.createFolder(name, parentFolderId || null, authRequest.user.id);
             return res.status(201).json(new FolderDto(folder));
         } catch (error) {
             next(error);
@@ -27,7 +27,7 @@ class FoldersController {
         try {
             const authRequest = req as AuthRequest;
             const parentId = typeof req.query.parentId === 'string' ? req.query.parentId : null;
-            const contents = await foldersService.getFolderContents(parentId, authRequest.user.id);
+            const contents = await foldersFacade.getFolderContents(parentId, authRequest.user.id);
 
             return res.json({
                 files: contents.files.map(file => new FileDto(file)),
@@ -49,7 +49,7 @@ class FoldersController {
                 throw new Error('Name is required');
             }
 
-            const folder = await foldersService.renameFolder(folderId, name, authRequest.user.id);
+            const folder = await foldersFacade.renameFolder(folderId, name, authRequest.user.id);
             if (!folder) {
                 throw new Error('Folder not found');
             }
@@ -65,7 +65,7 @@ class FoldersController {
             const folderId = req.params.id as string;
             const { parentFolderId } = req.body;
 
-            const folder = await foldersService.moveFolder(folderId, parentFolderId as string | null, authRequest.user.id);
+            const folder = await foldersFacade.moveFolder(folderId, parentFolderId as string | null, authRequest.user.id);
             if (!folder) {
                 throw new Error('Folder not found');
             }
@@ -80,7 +80,7 @@ class FoldersController {
             const authRequest = req as AuthRequest;
             const folderId = req.params.id as string;
 
-            const result = await foldersService.deleteFolder(folderId, authRequest.user.id, authRequest.tgCredentials);
+            const result = await foldersFacade.deleteFolder(folderId, authRequest.user.id, authRequest.tgCredentials);
             return res.json(result);
         } catch (error) {
             next(error);
@@ -90,7 +90,7 @@ class FoldersController {
     async getTree(req: Request, res: Response, next: NextFunction) {
         try {
             const authRequest = req as AuthRequest;
-            const tree = await foldersService.getTree(authRequest.user.id);
+            const tree = await foldersFacade.getTree(authRequest.user.id);
             // Tree might be complex structure, for now just returning as is but ideally should be mapped if it contains raw mongoose docs
             return res.json(tree);
         } catch (error) {

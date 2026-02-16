@@ -1,4 +1,4 @@
-import { IEventManager } from './interfaces';
+import { IFilesObserver } from './interfaces';
 
 export enum EventType {
     FILE_UPLOADED = 'FILE_UPLOADED',
@@ -14,17 +14,17 @@ export enum EventType {
 
 export type EventHandler = (data: any) => void;
 
-class EventManager implements IEventManager {
-    private static instance: EventManager;
+class FilesObserver implements IFilesObserver {
+    private static instance: FilesObserver;
     private listeners: Map<EventType, EventHandler[]> = new Map();
 
     private constructor() { }
 
-    static getInstance(): EventManager {
-        if (!EventManager.instance) {
-            EventManager.instance = new EventManager();
+    static getInstance(): FilesObserver {
+        if (!FilesObserver.instance) {
+            FilesObserver.instance = new FilesObserver();
         }
-        return EventManager.instance;
+        return FilesObserver.instance;
     }
 
     on(event: EventType, handler: EventHandler): void {
@@ -55,4 +55,4 @@ class EventManager implements IEventManager {
     }
 }
 
-export default EventManager.getInstance();
+export default FilesObserver.getInstance();

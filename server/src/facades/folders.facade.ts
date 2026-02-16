@@ -2,12 +2,12 @@ import { IFolder, Folder } from '../models/folder.model';
 import { IFile, File } from '../models/file.model';
 import { Types } from 'mongoose';
 import ApiError from '../exceptions/api.error';
-import filesService from './files.service';
-import eventManager, { EventType } from '../events/event.manager';
+import filesService from './files.facade';
+import filesObserver, { EventType } from '../observers/files.observer';
 import { QueryBuilder } from '../builders/query.builder';
-import { IFoldersService } from './interfaces';
+import { IFoldersFacade } from './interfaces';
 
-class FoldersService implements IFoldersService {
+class FoldersFacade implements IFoldersFacade {
     async createFolder(name: string, parentFolderId: string | null, ownerId: string) {
         const folder = await Folder.create({
             ownerId: new Types.ObjectId(ownerId),
@@ -15,7 +15,7 @@ class FoldersService implements IFoldersService {
             parentFolderId: parentFolderId ? new Types.ObjectId(parentFolderId) : null,
         });
 
-        eventManager.emit(EventType.FOLDER_CREATED, folder);
+        filesObserver.emit(EventType.FOLDER_CREATED, folder);
 
         return folder;
     }
@@ -75,7 +75,7 @@ class FoldersService implements IFoldersService {
 
         const updatedFolder = await Folder.findByIdAndUpdate(folderId, { name }, { new: true });
 
-        eventManager.emit(EventType.FOLDER_RENAMED, updatedFolder);
+        filesObserver.emit(EventType.FOLDER_RENAMED, updatedFolder);
 
         return updatedFolder;
     }
@@ -106,7 +106,7 @@ class FoldersService implements IFoldersService {
             parentFolderId: newParentId ? new Types.ObjectId(newParentId) : null
         }, { new: true });
 
-        eventManager.emit(EventType.FOLDER_MOVED, updatedFolder);
+        filesObserver.emit(EventType.FOLDER_MOVED, updatedFolder);
 
         return updatedFolder;
     }
@@ -139,7 +139,7 @@ class FoldersService implements IFoldersService {
 
         await Folder.deleteOne({ _id: folderId });
 
-        eventManager.emit(EventType.FOLDER_DELETED, { folderId, ownerId });
+        filesObserver.emit(EventType.FOLDER_DELETED, { folderId, ownerId });
 
         return { message: 'Folder and contents deleted' };
     }
@@ -163,7 +163,6 @@ class FoldersService implements IFoldersService {
                 if (parent) {
                     parent.children.push(folderMap[folder._id.toString()]);
                 } else {
-                    // Orphaned folder, treat as root or handle error
                     rootFolders.push(folderMap[folder._id.toString()]);
                 }
             } else {
@@ -175,4 +174,4 @@ class FoldersService implements IFoldersService {
     }
 }
 
-export default new FoldersService();
+export default new FoldersFacade();
