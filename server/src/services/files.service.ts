@@ -1,5 +1,5 @@
 import { Stream } from 'stream';
-import { TelegramServiceFactory } from '../factories/telegram.factory';
+import telegramServiceFactory from '../factories/telegram.factory';
 import fileRepository from '../repositories/file.repository';
 import folderRepository from '../repositories/folder.repository';
 import ApiError from '../exceptions/api.error';
@@ -14,7 +14,7 @@ class FilesService implements IFilesService {
         tgCredentials: { botToken: string; chatId: string },
         parentFolderId: string | null = null
     ) {
-        const telegramService = TelegramServiceFactory.getInstance(tgCredentials.botToken);
+        const telegramService = telegramServiceFactory.getInstance(tgCredentials.botToken);
 
         const fileStream = Stream.Readable.from(file.buffer);
 
@@ -54,7 +54,7 @@ class FilesService implements IFilesService {
             throw ApiError.BadRequest('File not uploaded to Telegram correctly');
         }
 
-        const telegramService = TelegramServiceFactory.getInstance(tgCredentials.botToken);
+        const telegramService = telegramServiceFactory.getInstance(tgCredentials.botToken);
         const fileLink = await telegramService.getFileLink(file.telegramFileId);
 
         eventManager.emit(EventType.FILE_DOWNLOADED, { fileId, ownerId });
@@ -75,7 +75,7 @@ class FilesService implements IFilesService {
             throw ApiError.BadRequest('File not uploaded to Telegram correctly');
         }
 
-        const telegramService = TelegramServiceFactory.getInstance(tgCredentials.botToken);
+        const telegramService = telegramServiceFactory.getInstance(tgCredentials.botToken);
         const stream = await telegramService.getFileStream(file.telegramFileId);
 
         return {
@@ -136,7 +136,7 @@ class FilesService implements IFilesService {
             throw ApiError.NotFound('File not found');
         }
 
-        const telegramService = TelegramServiceFactory.getInstance(tgCredentials.botToken);
+        const telegramService = telegramServiceFactory.getInstance(tgCredentials.botToken);
         await telegramService.deleteMessage(tgCredentials.chatId, file.telegramMessageId);
 
         await fileRepository.delete(fileId);

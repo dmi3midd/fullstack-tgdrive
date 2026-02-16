@@ -1,3 +1,4 @@
+import { IEventManager } from './interfaces';
 
 export enum EventType {
     FILE_UPLOADED = 'FILE_UPLOADED',
@@ -13,7 +14,7 @@ export enum EventType {
 
 export type EventHandler = (data: any) => void;
 
-class EventManager {
+class EventManager implements IEventManager {
     private static instance: EventManager;
     private listeners: Map<EventType, EventHandler[]> = new Map();
 

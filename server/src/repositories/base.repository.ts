@@ -1,5 +1,6 @@
 import { Document, Model, Types } from 'mongoose';
 import { QueryBuilder } from './query.builder';
+import { IBaseRepository } from './interfaces';
 
 export interface OwnedDocument extends Document {
     ownerId: Types.ObjectId;
@@ -7,7 +8,7 @@ export interface OwnedDocument extends Document {
     parentFolderId: Types.ObjectId | null;
 }
 
-export abstract class BaseRepository<T extends OwnedDocument> {
+export abstract class BaseRepository<T extends OwnedDocument> implements IBaseRepository<T> {
     protected abstract model: Model<T>;
 
     query(): QueryBuilder<T> {

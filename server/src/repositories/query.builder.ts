@@ -1,7 +1,8 @@
 import { Model, Types } from 'mongoose';
 import { OwnedDocument } from './base.repository';
+import { IQueryBuilder } from './interfaces';
 
-export class QueryBuilder<T extends OwnedDocument> {
+export class QueryBuilder<T extends OwnedDocument> implements IQueryBuilder<T> {
     private filters: Record<string, any> = {};
 
     constructor(private model: Model<T>) { }
