@@ -1,16 +1,16 @@
-import { IFolder } from '../models/folder.model';
+import { IFolder, Folder } from '../models/folder.model';
+import { IFile, File } from '../models/file.model';
 import { Types } from 'mongoose';
 import ApiError from '../exceptions/api.error';
 import filesService from './files.service';
-import folderRepository from '../repositories/folder.repository';
-import fileRepository from '../repositories/file.repository';
 import eventManager, { EventType } from '../events/event.manager';
+import { QueryBuilder } from '../builders/query.builder';
 import { IFoldersService } from './interfaces';
 
 class FoldersService implements IFoldersService {
     async createFolder(name: string, parentFolderId: string | null, ownerId: string) {
-        const folder = await folderRepository.create({
-            ownerId: new Types.ObjectId(ownerId) as any,
+        const folder = await Folder.create({
+            ownerId: new Types.ObjectId(ownerId),
             name,
             parentFolderId: parentFolderId ? new Types.ObjectId(parentFolderId) : null,
         });
@@ -21,12 +21,12 @@ class FoldersService implements IFoldersService {
     }
 
     async getFolderContents(parentId: string | null, ownerId: string) {
-        const folders = await folderRepository.query()
+        const folders = await new QueryBuilder<IFolder>(Folder)
             .byOwner(ownerId)
             .inFolder(parentId)
             .findMany();
 
-        const files = await fileRepository.query()
+        const files = await new QueryBuilder<IFile>(File)
             .byOwner(ownerId)
             .inFolder(parentId)
             .findMany();
@@ -35,7 +35,7 @@ class FoldersService implements IFoldersService {
         if (parentId) {
             let currentId: string | null = parentId;
             while (currentId) {
-                const currentFolder: IFolder | null = await folderRepository.findById(currentId, ownerId);
+                const currentFolder: IFolder | null = await Folder.findOne({ _id: currentId, ownerId });
                 if (currentFolder) {
                     path.unshift({ _id: currentFolder._id, name: currentFolder.name });
                     currentId = currentFolder.parentFolderId ? currentFolder.parentFolderId.toString() : null;
@@ -49,30 +49,31 @@ class FoldersService implements IFoldersService {
     }
 
     async renameFolder(folderId: string, name: string, ownerId: string) {
-        const folder = await folderRepository.findById(folderId, ownerId);
+        const folder = await Folder.findOne({ _id: folderId, ownerId });
         if (!folder) {
             throw ApiError.NotFound('Folder not found');
         }
 
         // Check for collisions in both files and folders
-        const collisionFile = await fileRepository.checkNameCollision(
-            ownerId,
-            folder.parentFolderId?.toString() || null,
-            name
-        );
+        const collisionFile = await new QueryBuilder<IFile>(File)
+            .byOwner(ownerId)
+            .inFolder(folder.parentFolderId?.toString() || null)
+            .withName(name)
+            .findOne();
 
-        const collisionFolder = await folderRepository.checkNameCollision(
-            ownerId,
-            folder.parentFolderId?.toString() || null,
-            name,
-            folderId
-        );
+        const folderCollisionBuilder = new QueryBuilder<IFolder>(Folder)
+            .byOwner(ownerId)
+            .inFolder(folder.parentFolderId?.toString() || null)
+            .withName(name)
+            .excludeId(folderId);
+
+        const collisionFolder = await folderCollisionBuilder.findOne();
 
         if (collisionFile || collisionFolder) {
             throw ApiError.BadRequest('A file or folder with this name already exists in this directory');
         }
 
-        const updatedFolder = await folderRepository.update(folderId, { name });
+        const updatedFolder = await Folder.findByIdAndUpdate(folderId, { name }, { new: true });
 
         eventManager.emit(EventType.FOLDER_RENAMED, updatedFolder);
 
@@ -80,7 +81,7 @@ class FoldersService implements IFoldersService {
     }
 
     async moveFolder(folderId: string, newParentId: string | null, ownerId: string) {
-        const folder = await folderRepository.findById(folderId, ownerId);
+        const folder = await Folder.findOne({ _id: folderId, ownerId });
         if (!folder) {
             throw ApiError.NotFound('Folder not found');
         }
@@ -96,14 +97,14 @@ class FoldersService implements IFoldersService {
                 if (currentParentId === folderId) {
                     throw ApiError.BadRequest('Cannot move folder into its own subfolder');
                 }
-                const parentFolder: IFolder | null = await folderRepository.findById(currentParentId, ownerId);
+                const parentFolder: IFolder | null = await Folder.findOne({ _id: currentParentId, ownerId });
                 currentParentId = parentFolder?.parentFolderId ? parentFolder.parentFolderId.toString() : null;
             }
         }
 
-        const updatedFolder = await folderRepository.update(folderId, {
+        const updatedFolder = await Folder.findByIdAndUpdate(folderId, {
             parentFolderId: newParentId ? new Types.ObjectId(newParentId) : null
-        });
+        }, { new: true });
 
         eventManager.emit(EventType.FOLDER_MOVED, updatedFolder);
 
@@ -111,13 +112,13 @@ class FoldersService implements IFoldersService {
     }
 
     async deleteFolder(folderId: string, ownerId: string, tgCredentials: { botToken: string; chatId: string }) {
-        const folder = await folderRepository.findById(folderId, ownerId);
+        const folder = await Folder.findOne({ _id: folderId, ownerId });
         if (!folder) {
             throw ApiError.NotFound('Folder not found');
         }
 
         // Recursively delete subfolders
-        const subfolders = await folderRepository.query()
+        const subfolders = await new QueryBuilder<IFolder>(Folder)
             .byOwner(ownerId)
             .inFolder(folderId)
             .findMany();
@@ -127,7 +128,7 @@ class FoldersService implements IFoldersService {
         }
 
         // Delete files in this folder
-        const files = await fileRepository.query()
+        const files = await new QueryBuilder<IFile>(File)
             .byOwner(ownerId)
             .inFolder(folderId)
             .findMany();
@@ -136,7 +137,7 @@ class FoldersService implements IFoldersService {
             await filesService.deleteFile(file._id.toString(), ownerId, tgCredentials);
         }
 
-        await folderRepository.delete(folderId);
+        await Folder.deleteOne({ _id: folderId });
 
         eventManager.emit(EventType.FOLDER_DELETED, { folderId, ownerId });
 
@@ -144,7 +145,7 @@ class FoldersService implements IFoldersService {
     }
 
     async getTree(ownerId: string) {
-        const folders = await folderRepository.query()
+        const folders = await new QueryBuilder<IFolder>(Folder)
             .byOwner(ownerId)
             .findMany();
 
@@ -169,13 +170,6 @@ class FoldersService implements IFoldersService {
                 rootFolders.push(folderMap[folder._id.toString()]);
             }
         });
-
-        // Optionally sort by name
-        // const sortNodes = (nodes: any[]) => {
-        //     nodes.sort((a, b) => a.name.localeCompare(b.name));
-        //     nodes.forEach(node => sortNodes(node.children));
-        // };
-        // sortNodes(rootFolders);
 
         return rootFolders;
     }

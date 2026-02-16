@@ -1,10 +1,11 @@
 import { Stream } from 'stream';
 import telegramServiceFactory from '../factories/telegram.factory';
-import fileRepository from '../repositories/file.repository';
-import folderRepository from '../repositories/folder.repository';
+import { File, IFile } from '../models/file.model';
+import { Folder, IFolder } from '../models/folder.model';
 import ApiError from '../exceptions/api.error';
 import { Types } from 'mongoose';
 import eventManager, { EventType } from '../events/event.manager';
+import { QueryBuilder } from '../builders/query.builder';
 import { IFilesService } from './interfaces';
 
 class FilesService implements IFilesService {
@@ -25,8 +26,8 @@ class FilesService implements IFilesService {
                 file.originalname
             );
 
-            const newFile = await fileRepository.create({
-                ownerId: new Types.ObjectId(ownerId) as any,
+            const newFile = await File.create({
+                ownerId: new Types.ObjectId(ownerId),
                 name: file.originalname,
                 size: file.size,
                 mimeType: file.mimetype,
@@ -45,7 +46,7 @@ class FilesService implements IFilesService {
     }
 
     async downloadFile(fileId: string, ownerId: string, tgCredentials: { botToken: string; chatId: string }) {
-        const file = await fileRepository.findById(fileId, ownerId);
+        const file = await File.findOne({ _id: fileId, ownerId });
         if (!file) {
             throw ApiError.NotFound('File not found');
         }
@@ -66,7 +67,7 @@ class FilesService implements IFilesService {
     }
 
     async getFileStreamWithMetadata(fileId: string, ownerId: string, tgCredentials: { botToken: string }) {
-        const file = await fileRepository.findById(fileId, ownerId);
+        const file = await File.findOne({ _id: fileId, ownerId });
         if (!file) {
             throw ApiError.NotFound('File not found');
         }
@@ -85,30 +86,31 @@ class FilesService implements IFilesService {
     }
 
     async renameFile(fileId: string, name: string, ownerId: string) {
-        const file = await fileRepository.findById(fileId, ownerId);
+        const file = await File.findOne({ _id: fileId, ownerId });
         if (!file) {
             throw ApiError.NotFound('File not found');
         }
 
         // Check for collisions in both files and folders
-        const collisionFile = await fileRepository.checkNameCollision(
-            ownerId,
-            file.parentFolderId?.toString() || null,
-            name,
-            fileId
-        );
+        const fileCollisionBuilder = new QueryBuilder<IFile>(File)
+            .byOwner(ownerId)
+            .inFolder(file.parentFolderId?.toString() || null)
+            .withName(name)
+            .excludeId(fileId);
 
-        const collisionFolder = await folderRepository.checkNameCollision(
-            ownerId,
-            file.parentFolderId?.toString() || null,
-            name
-        );
+        const collisionFile = await fileCollisionBuilder.findOne();
+
+        const collisionFolder = await new QueryBuilder<IFolder>(Folder)
+            .byOwner(ownerId)
+            .inFolder(file.parentFolderId?.toString() || null)
+            .withName(name)
+            .findOne();
 
         if (collisionFile || collisionFolder) {
             throw ApiError.BadRequest('A file or folder with this name already exists in this directory');
         }
 
-        const updatedFile = await fileRepository.update(fileId, { name });
+        const updatedFile = await File.findByIdAndUpdate(fileId, { name }, { new: true });
 
         eventManager.emit(EventType.FILE_RENAMED, updatedFile);
 
@@ -116,14 +118,14 @@ class FilesService implements IFilesService {
     }
 
     async moveFile(fileId: string, parentFolderId: string | null, ownerId: string) {
-        const file = await fileRepository.findById(fileId, ownerId);
+        const file = await File.findOne({ _id: fileId, ownerId });
         if (!file) {
             throw ApiError.NotFound('File not found');
         }
 
-        const updatedFile = await fileRepository.update(fileId, {
+        const updatedFile = await File.findByIdAndUpdate(fileId, {
             parentFolderId: parentFolderId ? new Types.ObjectId(parentFolderId) : null
-        });
+        }, { new: true });
 
         eventManager.emit(EventType.FILE_MOVED, updatedFile);
 
@@ -131,7 +133,7 @@ class FilesService implements IFilesService {
     }
 
     async deleteFile(fileId: string, ownerId: string, tgCredentials: { botToken: string; chatId: string }) {
-        const file = await fileRepository.findById(fileId, ownerId);
+        const file = await File.findOne({ _id: fileId, ownerId });
         if (!file) {
             throw ApiError.NotFound('File not found');
         }
@@ -139,7 +141,7 @@ class FilesService implements IFilesService {
         const telegramService = telegramServiceFactory.getInstance(tgCredentials.botToken);
         await telegramService.deleteMessage(tgCredentials.chatId, file.telegramMessageId);
 
-        await fileRepository.delete(fileId);
+        await File.deleteOne({ _id: fileId });
 
         eventManager.emit(EventType.FILE_DELETED, { fileId, ownerId });
 

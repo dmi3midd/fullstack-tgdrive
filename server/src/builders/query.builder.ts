@@ -1,6 +1,20 @@
-import { Model, Types } from 'mongoose';
-import { OwnedDocument } from './base.repository';
-import { IQueryBuilder } from './interfaces';
+import { Document, Model, Types } from 'mongoose';
+
+export interface OwnedDocument extends Document {
+    ownerId: Types.ObjectId;
+    name: string;
+    parentFolderId: Types.ObjectId | null;
+}
+
+export interface IQueryBuilder<T> {
+    byOwner(ownerId: string): this;
+    inFolder(parentFolderId: string | null): this;
+    withName(name: string): this;
+    excludeId(id: string): this;
+    where(field: string, value: any): this;
+    findMany(): Promise<T[]>;
+    findOne(): Promise<T | null>;
+}
 
 export class QueryBuilder<T extends OwnedDocument> implements IQueryBuilder<T> {
     private filters: Record<string, any> = {};
