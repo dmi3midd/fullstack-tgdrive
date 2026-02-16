@@ -1,11 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
-import CryptoJS from 'crypto-js';
 
 import { User } from '../models/user.model';
 import { UserDto } from '../dtos/user.dto';
 import tokenUtil from '../utils/token.util';
 import { config } from '../config/env.config';
 import ApiError from '../exceptions/api.error';
+import { createEncryptionContext } from '../strategies';
+
+const encryptionContext = createEncryptionContext(config.encryptionStrategy);
 
 export interface AuthRequest extends Request {
     user: UserDto;
@@ -38,8 +40,8 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
         }
 
         try {
-            const botToken = CryptoJS.AES.decrypt(user.encryptedBotToken, config.encryptionKey).toString(CryptoJS.enc.Utf8);
-            const chatId = CryptoJS.AES.decrypt(user.encryptedChatId, config.encryptionKey).toString(CryptoJS.enc.Utf8);
+            const botToken = encryptionContext.decrypt(user.encryptedBotToken, config.encryptionKey);
+            const chatId = encryptionContext.decrypt(user.encryptedChatId, config.encryptionKey);
 
             if (!botToken || !chatId) {
                 return next(ApiError.BadRequest('Telegram credentials are missing or corrupted'));

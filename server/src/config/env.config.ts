@@ -11,6 +11,7 @@ const envSchema = z.object({
     JWT_ACCESS_EXPIRES_IN: z.string().min(2, 'JWT_EXPIRES_IN is required').default('15m'),
     JWT_REFRESH_EXPIRES_IN: z.string().min(2, 'JWT_EXPIRES_IN is required').default('14d'),
     ENCRYPTION_KEY: z.string().length(64, 'ENCRYPTION_KEY must be 64 hex characters (32 bytes)'),
+    ENCRYPTION_STRATEGY: z.enum(['aes-cbc', 'aes-gcm', 'chacha20']).default('aes-gcm'),
 });
 
 const env = envSchema.safeParse(process.env);
@@ -28,4 +29,5 @@ export const config = {
     jwtAccessExpiresIn: env.data.JWT_ACCESS_EXPIRES_IN,
     jwtRefreshExpiresIn: env.data.JWT_REFRESH_EXPIRES_IN,
     encryptionKey: env.data.ENCRYPTION_KEY,
+    encryptionStrategy: env.data.ENCRYPTION_STRATEGY,
 }

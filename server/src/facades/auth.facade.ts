@@ -1,5 +1,4 @@
 import bcrypt from 'bcrypt';
-import CryptoJS from 'crypto-js';
 
 import { config } from '../config/env.config';
 import { User } from "../models/user.model";
@@ -7,7 +6,9 @@ import { UserDto } from '../dtos/user.dto';
 import tokenUtil from '../utils/token.util';
 import ApiError from '../exceptions/api.error';
 import { IAuthFacade } from './interfaces';
+import { createEncryptionContext } from '../strategies';
 
+const encryptionContext = createEncryptionContext(config.encryptionStrategy);
 
 class AuthFacade implements IAuthFacade {
     async registration(email: string, password: string, botToken: string, chatId: string) {
@@ -16,8 +17,8 @@ class AuthFacade implements IAuthFacade {
             throw ApiError.BadRequest('User already exists');
         }
         const hashedPassword = await bcrypt.hash(password, 10);
-        const encryptedBotToken = CryptoJS.AES.encrypt(botToken, config.encryptionKey).toString();
-        const encryptedChatId = CryptoJS.AES.encrypt(chatId, config.encryptionKey).toString();
+        const encryptedBotToken = encryptionContext.encrypt(botToken, config.encryptionKey);
+        const encryptedChatId = encryptionContext.encrypt(chatId, config.encryptionKey);
         const user = await User.create({ email, passwordHash: hashedPassword, encryptedBotToken, encryptedChatId });
         const userDto = new UserDto(user);
         const tokens = tokenUtil.generateTokens({ ...userDto });
