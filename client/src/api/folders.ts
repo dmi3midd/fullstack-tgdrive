@@ -1,36 +1,24 @@
-import client from './client';
+import { BaseResourceApi } from './base-resource.api';
 import type { FolderItem, FolderContentResponse } from '../types/files';
 
-export const foldersApi = {
-    create: async (name: string, parentFolderId?: string | null) => {
-        const response = await client.post<FolderItem>('/folders', { name, parentFolderId });
-        return response.data;
-    },
+class FoldersApi extends BaseResourceApi<FolderItem> {
+    protected readonly basePath = '/folders';
 
-    getContents: async (parentId: string | null = null) => {
-        const params = parentId ? { parentId } : {};
-        const response = await client.get<FolderContentResponse>('/folders', { params });
+    async create(name: string, parentFolderId?: string | null): Promise<FolderItem> {
+        const response = await this.client.post<FolderItem>('/folders', { name, parentFolderId });
         return response.data;
-    },
-
-    getTree: async () => {
-        // Assuming backend supports this or we ignore it for now if not implemented in router
-        // Check router: router.get('/tree', ...); Yes it does!
-        const response = await client.get<any>('/folders/tree');
-        return response.data;
-    },
-
-    rename: async (folderId: string, name: string) => {
-        const response = await client.patch<FolderItem>(`/folders/${folderId}`, { name });
-        return response.data;
-    },
-
-    move: async (folderId: string, parentFolderId: string | null) => {
-        const response = await client.patch<FolderItem>(`/folders/${folderId}/move`, { parentFolderId });
-        return response.data;
-    },
-
-    delete: async (folderId: string) => {
-        await client.delete(`/folders/${folderId}`);
     }
-};
+
+    async getContents(parentId: string | null = null): Promise<FolderContentResponse> {
+        const params = parentId ? { parentId } : {};
+        const response = await this.client.get<FolderContentResponse>('/folders', { params });
+        return response.data;
+    }
+
+    async getTree(): Promise<any> {
+        const response = await this.client.get<any>('/folders/tree');
+        return response.data;
+    }
+}
+
+export const foldersApi = new FoldersApi();
